@@ -1,7 +1,7 @@
 # Deckard
 ## Declarative Kafka Resource Definitions
 
-Deckard enables you to create Kafka producers by just declaring interfaces like this:
+The Deckard library enables you to easily create Kafka producers by just declaring interfaces like this:
 
 ````java
 @KafkaProducer(topic="my.topic")
@@ -12,6 +12,8 @@ public interface MyProducer extends GenericProducer<String, MyDto> {
 
 }
 ````
+
+This will provide your application with a functioning message producer for Kafka.
 
 ### How To:
 
