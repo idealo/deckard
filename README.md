@@ -39,3 +39,21 @@ utilize the specified serializer.
 You may provide your own Kafka Templates in the Spring Context. If they match the
 required types for message keys and values, they will be wired into the
 respective producers automatically. 
+
+#### About the project
+
+This project was the result of our _A&L HackDay_ in October 2018. Participants were:
+- Marcus Janke (Postman)
+- Alexander Lüdeke (Postman)
+- Richard Remus (Postman)
+- Gerald Sander (Postman)
+- Nabil Tawfik (SSO)
+
+Team Postman will continue to develop this, since we're already using it in production. 
+
+__However, you are welcome to join in with your ideas and create pull requests!__
+
+#### Planned Features:
+- proper auto-configuration
+- configurable, individual Serializers per Producer
+- integration of Kafka Encryption as provided by team SSO
