@@ -1,4 +1,4 @@
-@Library('idp@0.11.0')
+@Library('idp@0.17.0')
 
 String repo = "ssh://git@code.eu.idealo.com:7999/uds/deckard.git"
 String mailTo = 'team-postman@idealo.de'
