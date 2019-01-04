@@ -10,4 +10,7 @@ import java.lang.annotation.Target;
 public @interface KafkaProducer {
 
     String topic();
+    Class serializer() default DefaultSerializer.class;
+
+    class DefaultSerializer {}
 }

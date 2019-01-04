@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
+import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.assertj.core.util.Lists;
 import org.awaitility.Duration;
@@ -32,7 +33,7 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.getRecords;
 
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = {"spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}", "spring.kafka.producer.value-serializer: org.apache.kafka.common.serialization.IntegerSerializer"})
+@SpringBootTest(properties = {"spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}"})
 public class ProxyBeanFactoryIT {
 
     private static final String KAFKA_TEST_TOPIC = "the.test.topic";
@@ -69,7 +70,7 @@ public class ProxyBeanFactoryIT {
 
     @TestConfiguration
     public static class TestConfig {
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC)
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC, serializer = IntegerSerializer.class)
         interface TestProducer extends GenericProducer<String, Integer> {
         }
     }
