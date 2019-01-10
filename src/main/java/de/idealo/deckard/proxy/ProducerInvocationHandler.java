@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 import static java.lang.String.format;
 
 @RequiredArgsConstructor
-@EqualsAndHashCode
 public class ProducerInvocationHandler<K, V> implements InvocationHandler {
 
     private static final int MAX_NUMBER_OF_ARGUMENTS = 2;
