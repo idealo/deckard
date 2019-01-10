@@ -1,6 +1,7 @@
 package de.idealo.deckard.proxy;
 
 import de.idealo.deckard.producer.Producer;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.InvocationHandler;
@@ -9,6 +10,7 @@ import java.lang.reflect.Method;
 import static java.lang.String.format;
 
 @RequiredArgsConstructor
+@EqualsAndHashCode
 public class ProducerInvocationHandler<K, V> implements InvocationHandler {
 
     private static final int MAX_NUMBER_OF_ARGUMENTS = 2;
