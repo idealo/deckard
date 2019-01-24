@@ -32,15 +32,15 @@ public class ProxyBeanFactory {
     private final KafkaProperties kafkaProperties;
 
     @SuppressWarnings("unchecked")
-    public <K, V, T extends GenericProducer<K, V>> T createBean(ClassLoader classLoader, Class<T> clazz) {
-        ProducerDefinition producerDefinition = new ProducerDefinition(clazz, kafkaProperties.getProducer().getValueSerializer());
+    public <K, V, T extends GenericProducer<K, V>> T createBean(ClassLoader classLoader, Class<T> producerClass) {
+        ProducerDefinition producerDefinition = new ProducerDefinition(producerClass);
 
         KafkaTemplate<K, V> template = createTemplate(kafkaProperties, producerDefinition);
 
         Producer<K, V> producer = new Producer<>(template, producerDefinition.getTopic());
 
         ProducerInvocationHandler<K, V> handler = new ProducerInvocationHandler<>(producer);
-        return (T) Proxy.newProxyInstance(classLoader, new Class[]{clazz}, handler);
+        return (T) Proxy.newProxyInstance(classLoader, new Class[]{producerClass}, handler);
     }
 
     private <K, V> KafkaTemplate<K, V> createTemplate(@Autowired(required = false) KafkaProperties kafkaProperties, ProducerDefinition producerDefinition) {
@@ -51,6 +51,7 @@ public class ProxyBeanFactory {
         });
 
         Map<String, Object> producerProps = properties.buildProducerProperties();
+        producerProps.put("key.serializer", producerDefinition.getKeySerializer());
         producerProps.put("value.serializer", producerDefinition.getValueSerializer());
 
         DefaultKafkaProducerFactory<K, V> producerFactory = new DefaultKafkaProducerFactory<>(producerProps);
@@ -62,35 +63,51 @@ public class ProxyBeanFactory {
     private class ProducerDefinition<T extends GenericProducer> {
 
         private final String topic;
+        private final Class keySerializer;
         private final Class valueSerializer;
 
-        private ProducerDefinition(Class<T> producerClass, Class defaultSerializer) {
-            this.topic = retrieveTopic(producerClass);
-            this.valueSerializer = retrieveValueSerializer(producerClass, defaultSerializer);
+        private ProducerDefinition(final Class<T> producerClass) {
+            final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
+            this.topic = retrieveTopic(producerClass, kafkaProducer);
+            this.keySerializer = retrieveKeySerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getKeySerializer());
+            this.valueSerializer = retrieveValueSerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getValueSerializer());
         }
 
-        private String retrieveTopic(Class<T> producerClass) {
-            final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
-            final String topic;
-            if (nonNull(kafkaProducer) && hasText(kafkaProducer.topic())) {
-                topic = kafkaProducer.topic();
-            } else {
-                topic = splitCamelCase(producerClass.getSimpleName()).stream().filter(NOT_RESERVED).collect(joining("."));
+        private String retrieveTopic(Class<T> producerClass, final KafkaProducer kafkaProducer) {
+            if (isTopicDefined(kafkaProducer)) {
+                return kafkaProducer.topic();
             }
-            return topic;
+            return generateTopicNameFromProducerClassName(producerClass);
         }
 
-        private Class retrieveValueSerializer(Class<T> producerClass, Class serializerFallback) {
-            final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
-            final Class retrievedSerializer;
+        private String generateTopicNameFromProducerClassName(final Class<T> producerClass) {
+            return splitCamelCase(producerClass.getSimpleName()).stream().filter(NOT_RESERVED).collect(joining("."));
+        }
 
-            if (nonNull(kafkaProducer) && !kafkaProducer.valueSerializer().equals(KafkaProducer.DefaultSerializer.class)){
-                retrievedSerializer = kafkaProducer.valueSerializer();
-            } else {
-                retrievedSerializer = serializerFallback;
+        private boolean isTopicDefined(final KafkaProducer kafkaProducer) {
+            return nonNull(kafkaProducer) && hasText(kafkaProducer.topic());
+        }
+
+        private Optional<Class> retrieveKeySerializer(KafkaProducer kafkaProducer) {
+            if (keySerializerDefined(kafkaProducer)) {
+                return Optional.of(kafkaProducer.keySerializer());
             }
+            return Optional.empty();
+        }
 
-            return retrievedSerializer;
+        private boolean keySerializerDefined(final KafkaProducer kafkaProducer) {
+            return nonNull(kafkaProducer) && !kafkaProducer.keySerializer().equals(KafkaProducer.DefaultSerializer.class);
+        }
+
+        private Optional<Class> retrieveValueSerializer(KafkaProducer kafkaProducer) {
+            if (isValueSerializerDefined(kafkaProducer)){
+                return Optional.of(kafkaProducer.valueSerializer());
+            }
+            return Optional.empty();
+        }
+
+        private boolean isValueSerializerDefined(final KafkaProducer kafkaProducer) {
+            return nonNull(kafkaProducer) && !kafkaProducer.valueSerializer().equals(KafkaProducer.DefaultSerializer.class);
         }
     }
 }
