@@ -1,7 +1,13 @@
 package de.idealo.deckard.proxy;
 
-import de.idealo.deckard.producer.GenericProducer;
-import de.idealo.deckard.stereotype.KafkaProducer;
+import static java.util.stream.StreamSupport.stream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.getRecords;
+
+import java.util.Map;
+
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -11,24 +17,21 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.assertj.core.util.Lists;
 import org.awaitility.Duration;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Map;
-
-import static java.util.stream.StreamSupport.stream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.getRecords;
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.stereotype.KafkaProducer;
+import de.idealo.junit.rules.TestLoggerRuleFactory;
 
 
 @RunWith(SpringRunner.class)
@@ -37,11 +40,14 @@ public class ProxyBeanFactoryIT {
 
     private static final String KAFKA_TEST_TOPIC = "the.test.topic";
 
+    @Rule
+    public TestRule testLogger = TestLoggerRuleFactory.silent();
+
     @ClassRule
     public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, KAFKA_TEST_TOPIC);
 
     @Autowired
-    TestConfig.TestProducer producer;
+    TestProducer producer;
 
     @Test
     public void shouldConfigureAnnotatedTopic() throws Exception {
@@ -67,10 +73,7 @@ public class ProxyBeanFactoryIT {
         });
     }
 
-    @TestConfiguration
-    public static class TestConfig {
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC)
-        interface TestProducer extends GenericProducer<String, Integer> {
-        }
+    @KafkaProducer(topic = KAFKA_TEST_TOPIC)
+    interface TestProducer extends GenericProducer<String, Integer> {
     }
 }

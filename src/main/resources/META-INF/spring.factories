@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+de.idealo.deckard.configuration.KafkaProducerAutoConfiguration,\
+de.idealo.deckard.configuration.BeanDefinitionRegistrarAutoConfiguration
