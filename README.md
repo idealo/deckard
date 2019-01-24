@@ -5,22 +5,21 @@ The Deckard library enables you to easily create Kafka producers by just declari
 
 ````java
 @KafkaProducer(topic="my.topic")
-public interface MyProducer extends GenericProducer<String, MyDto> {
- 
-    void send(MyDto data);
-    void send(String aKey, MyDto data);
-
-}
+public interface MyProducer extends GenericProducer<String, MyDto> {}
 ````
 
 This will provide your application with a functioning message producer for Kafka.
 
+GenericProducer provides the following methods for your convenience
+
+    void send(MyDto data);
+    void send(String aKey, MyDto data);
+
+
 ### How To:
 
-First you define your producers via interfaces as shown above, don't forget the annotation
-`@KafkaProducer` to configure the target topic.
-
-Next you need to annotate your application class with `@EnableKafkaProducers`.
+You only have to define your producers via interfaces as shown above.
+Then add the annotation `@KafkaProducer` to your interface to configure the target topic.
 
 **_And that's it!_** 
   
@@ -35,25 +34,21 @@ If you want something else (like `JsonSerializer`) you can just define it in you
 As of now, Deckard supports only one serializer per application, i.e. all producers in your app will
 utilize the specified serializer.
 
-#### Custom Kafka Templates
-You may provide your own Kafka Templates in the Spring Context. If they match the
-required types for message keys and values, they will be wired into the
-respective producers automatically. 
-
 #### About the project
 
-This project was the result of our _A&L HackDay_ in October 2018. Participants were:
+This project was the result of our _A&L HackDay_ in October 2018 and January 2019. Participants were:
 - Marcus Janke (Postman)
 - Alexander Lüdeke (Postman)
 - Richard Remus (Postman)
 - Gerald Sander (Postman)
 - Nabil Tawfik (SSO)
+- Daniel Hübner (Engineering Coach)
 
 Team Postman will continue to develop this, since we're already using it in production. 
 
 __However, you are welcome to join in with your ideas and create pull requests!__
 
 #### Planned Features:
-- proper auto-configuration
 - configurable, individual Serializers per Producer
 - integration of Kafka Encryption as provided by team SSO
+- IDE integration
