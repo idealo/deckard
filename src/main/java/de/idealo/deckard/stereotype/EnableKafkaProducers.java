@@ -7,11 +7,11 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 
-import de.idealo.deckard.configuration.KafkaProducerConfiguration;
+import de.idealo.deckard.configuration.KafkaProducerAutoConfiguration;
 import de.idealo.deckard.proxy.BeanDefinitionRegistrar;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({KafkaProducerConfiguration.class, BeanDefinitionRegistrar.class /*,ProducerBeanRegistrar.class*/})
+@Import({ KafkaProducerAutoConfiguration.class, BeanDefinitionRegistrar.class /*,ProducerBeanRegistrar.class*/})
 public @interface EnableKafkaProducers {
 }

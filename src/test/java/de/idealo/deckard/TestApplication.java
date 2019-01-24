@@ -1,10 +1,8 @@
 package de.idealo.deckard;
 
-import de.idealo.deckard.stereotype.EnableKafkaProducers;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@EnableKafkaProducers
 @SpringBootApplication
 public class TestApplication {
 

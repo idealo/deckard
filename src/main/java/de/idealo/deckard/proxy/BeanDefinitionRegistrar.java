@@ -24,6 +24,9 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+//        GenericBeanDefinition proxyBeanFactoryBeanDefinition = new GenericBeanDefinition();
+//        registry.registerBeanDefinition(ProxyBeanFactory.class.getSimpleName(), proxyBeanFactoryBeanDefinition);
+
         getProducerClasses()
                 .forEach(producerClass -> registerBean(registry, producerClass));
 
@@ -63,6 +66,7 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
         proxyBeanDefinition.setFactoryBeanName("proxyBeanFactory");
         proxyBeanDefinition.setFactoryMethodName("createBean");
         proxyBeanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
+        proxyBeanDefinition.setLazyInit(true);
 
         registry.registerBeanDefinition(beanName, proxyBeanDefinition);
     }
