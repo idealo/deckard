@@ -34,6 +34,10 @@ If you want something else (like `JsonSerializer`) you can just define it in you
 As of now, Deckard supports only one serializer per application, i.e. all producers in your app will
 utilize the specified serializer.
 
+#### Samples
+
+You can find a showcase for deckard here: ssh://git@code.eu.idealo.com:7999/uds/hack_day_declarative_kafka_producer_showcase.git
+
 #### About the project
 
 This project was the result of our _A&L HackDay_ in October 2018 and January 2019. Participants were:
