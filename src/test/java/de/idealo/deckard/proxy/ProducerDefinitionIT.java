@@ -1,10 +1,12 @@
 package de.idealo.deckard.proxy;
 
-import de.idealo.deckard.producer.GenericProducer;
-import de.idealo.deckard.stereotype.KafkaProducer;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import static java.util.stream.StreamSupport.stream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+
+import java.util.Map;
+
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,12 +32,12 @@ import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Map;
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.stereotype.KafkaProducer;
 
-import static java.util.stream.StreamSupport.stream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {"spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}", "spring.kafka.producer.value-serializer: org.apache.kafka.common.serialization.IntegerSerializer"})
@@ -104,11 +106,11 @@ public class ProducerDefinitionIT {
 
     @TestConfiguration
     public static class TestConfig {
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC_LONG, serializer = LongSerializer.class)
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC_LONG, valueSerializer = LongSerializer.class)
         interface LongProducer extends GenericProducer<String, Long> {
         }
 
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC_JSON, serializer = JsonSerializer.class)
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC_JSON, valueSerializer = JsonSerializer.class)
         interface JsonProducer extends GenericProducer<String, TestDto> {
         }
 

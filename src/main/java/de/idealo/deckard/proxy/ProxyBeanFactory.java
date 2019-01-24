@@ -1,25 +1,27 @@
 package de.idealo.deckard.proxy;
 
-import de.idealo.deckard.producer.GenericProducer;
-import de.idealo.deckard.producer.Producer;
-import de.idealo.deckard.stereotype.KafkaProducer;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
+import static de.idealo.deckard.util.CaseUtil.splitCamelCase;
+import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.joining;
+import static org.springframework.util.StringUtils.hasText;
 
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static de.idealo.deckard.util.CaseUtil.splitCamelCase;
-import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.joining;
-import static org.springframework.util.StringUtils.hasText;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.producer.Producer;
+import de.idealo.deckard.stereotype.KafkaProducer;
+
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -41,31 +43,7 @@ public class ProxyBeanFactory {
         return (T) Proxy.newProxyInstance(classLoader, new Class[]{clazz}, handler);
     }
 
-    private <T> String retrieveTopic(Class<T> clazz) {
-        final KafkaProducer kafkaProducer = clazz.getAnnotation(KafkaProducer.class);
-        final String topic;
-        if (nonNull(kafkaProducer) && hasText(kafkaProducer.topic())) {
-            topic = kafkaProducer.topic();
-        } else {
-            topic = splitCamelCase(clazz.getSimpleName()).stream().filter(NOT_RESERVED).collect(joining("."));
-        }
-        return topic;
-    }
-
-    private <T> Class retrieveSerializer(Class<T> clazz, Class<T> fallback) {
-        final KafkaProducer kafkaProducer = clazz.getAnnotation(KafkaProducer.class);
-        final Class retrievedSerializer;
-
-        if (nonNull(kafkaProducer) && !kafkaProducer.serializer().equals(KafkaProducer.DefaultSerializer.class)){
-            retrievedSerializer = kafkaProducer.serializer();
-        } else {
-            retrievedSerializer = fallback;
-        }
-
-        return retrievedSerializer;
-    }
-
-    <K, V> KafkaTemplate<K, V> createTemplate(@Autowired(required = false) KafkaProperties kafkaProperties, ProducerDefinition producerDefinition) {
+    private <K, V> KafkaTemplate<K, V> createTemplate(@Autowired(required = false) KafkaProperties kafkaProperties, ProducerDefinition producerDefinition) {
         KafkaProperties properties = Optional.ofNullable(kafkaProperties).orElseGet(() -> {
             log.warn("You didn't specify any Kafka properties in your configuration. Either this is a test scenario," +
                     "or this was not your intention.");
@@ -73,21 +51,46 @@ public class ProxyBeanFactory {
         });
 
         Map<String, Object> producerProps = properties.buildProducerProperties();
-        producerProps.put("value.serializer", producerDefinition.getSerializer());
+        producerProps.put("value.serializer", producerDefinition.getValueSerializer());
 
         DefaultKafkaProducerFactory<K, V> producerFactory = new DefaultKafkaProducerFactory<>(producerProps);
 
         return new KafkaTemplate<>(producerFactory);
     }
 
-    @Data
-    private class ProducerDefinition {
-        private final String topic;
-        private final Class serializer;
+    @Value
+    private class ProducerDefinition<T extends GenericProducer> {
 
-        public ProducerDefinition(Class annotatedProducer, Class defaultSerializer) {
-            this.topic = retrieveTopic(annotatedProducer);
-            this.serializer = retrieveSerializer(annotatedProducer, defaultSerializer);
+        private final String topic;
+        private final Class valueSerializer;
+
+        private ProducerDefinition(Class<T> producerClass, Class defaultSerializer) {
+            this.topic = retrieveTopic(producerClass);
+            this.valueSerializer = retrieveValueSerializer(producerClass, defaultSerializer);
+        }
+
+        private String retrieveTopic(Class<T> producerClass) {
+            final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
+            final String topic;
+            if (nonNull(kafkaProducer) && hasText(kafkaProducer.topic())) {
+                topic = kafkaProducer.topic();
+            } else {
+                topic = splitCamelCase(producerClass.getSimpleName()).stream().filter(NOT_RESERVED).collect(joining("."));
+            }
+            return topic;
+        }
+
+        private Class retrieveValueSerializer(Class<T> producerClass, Class serializerFallback) {
+            final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
+            final Class retrievedSerializer;
+
+            if (nonNull(kafkaProducer) && !kafkaProducer.valueSerializer().equals(KafkaProducer.DefaultSerializer.class)){
+                retrievedSerializer = kafkaProducer.valueSerializer();
+            } else {
+                retrievedSerializer = serializerFallback;
+            }
+
+            return retrievedSerializer;
         }
     }
 }
