@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
-    private ClassGraph classGraph = new ClassGraph().disableJarScanning().enableAllInfo();
+    private final ClassGraph classGraph = new ClassGraph().disableJarScanning().enableAllInfo();
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
