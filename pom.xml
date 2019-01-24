@@ -67,6 +67,12 @@
           <version>0.9.11</version>
       </dependency>
       <dependency>
+          <groupId>io.github.classgraph</groupId>
+          <artifactId>classgraph</artifactId>
+          <version>4.6.18</version>
+      </dependency>
+
+      <dependency>
           <groupId>de.idealo.test</groupId>
           <artifactId>test-logger</artifactId>
           <version>v0.2</version>
@@ -86,6 +92,7 @@
             <include>**/*IT.java</include>
           </includes>
           <goal>integration-test</goal>
+
         </configuration>
       </plugin>
     </plugins>

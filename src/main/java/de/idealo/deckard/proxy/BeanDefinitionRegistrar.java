@@ -1,8 +1,8 @@
 package de.idealo.deckard.proxy;
 
-import java.util.Set;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
-import org.reflections.Reflections;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -13,6 +13,10 @@ import org.springframework.util.StringUtils;
 
 import de.idealo.deckard.producer.GenericProducer;
 
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,10 +29,22 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
     }
 
-    private Set<Class<? extends GenericProducer>> getProducerClasses() {
-        Reflections reflections = new Reflections(this.getClass().getClassLoader());
-        Set<Class<? extends GenericProducer>> producers = reflections.getSubTypesOf(GenericProducer.class);
-        return producers;
+    private Collection<Class<?>> getProducerClasses() {
+        ScanResult scanResult = new ClassGraph()
+                .disableJarScanning()
+                .enableAllInfo()
+                .scan();
+
+        return scanResult
+                .getClassesImplementing(GenericProducer.class.getName())
+                .stream()
+                .map(this::getClass)
+                .collect(Collectors.toList());
+    }
+
+    @SneakyThrows
+    private Class<?> getClass(final ClassInfo classInfo) {
+        return Class.forName(classInfo.getName());
     }
 
     private void registerBean(BeanDefinitionRegistry registry, Class<?> beanClass) {

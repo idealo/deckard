@@ -23,7 +23,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
@@ -48,7 +47,7 @@ public class ProxyBeanFactoryIT {
     public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, KAFKA_TEST_TOPIC);
 
     @Autowired
-    TestConfig.TestProducer producer;
+    TestProducer producer;
 
     @Test
     public void shouldConfigureAnnotatedTopic() throws Exception {
@@ -74,10 +73,7 @@ public class ProxyBeanFactoryIT {
         });
     }
 
-    @TestConfiguration
-    public static class TestConfig {
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC)
-        interface TestProducer extends GenericProducer<String, Integer> {
-        }
+    @KafkaProducer(topic = KAFKA_TEST_TOPIC)
+    interface TestProducer extends GenericProducer<String, Integer> {
     }
 }
