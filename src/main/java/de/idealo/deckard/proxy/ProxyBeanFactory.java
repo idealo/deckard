@@ -21,12 +21,26 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 import static org.springframework.util.StringUtils.hasText;
 
+import java.lang.reflect.Proxy;
+import java.util.function.Predicate;
+
+import org.springframework.kafka.core.KafkaTemplate;
+
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.producer.Producer;
+import de.idealo.deckard.stereotype.KafkaProducer;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RequiredArgsConstructor
 @Slf4j
 public class ProxyBeanFactory {
 
     private static final Predicate<String> NOT_RESERVED = word -> !word.equalsIgnoreCase("Producer");
 
+    private final KafkaTemplate template;
     private final KafkaProperties kafkaProperties;
 
     @SuppressWarnings("unchecked")
