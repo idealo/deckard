@@ -15,30 +15,22 @@ import de.idealo.deckard.producer.GenericProducer;
 
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
-import io.github.classgraph.ScanResult;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
+    private ClassGraph classGraph = new ClassGraph().disableJarScanning().enableAllInfo();
+
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
-//        GenericBeanDefinition proxyBeanFactoryBeanDefinition = new GenericBeanDefinition();
-//        registry.registerBeanDefinition(ProxyBeanFactory.class.getSimpleName(), proxyBeanFactoryBeanDefinition);
-
         getProducerClasses()
                 .forEach(producerClass -> registerBean(registry, producerClass));
-
     }
 
     private Collection<Class<?>> getProducerClasses() {
-        ScanResult scanResult = new ClassGraph()
-                .disableJarScanning()
-                .enableAllInfo()
-                .scan();
-
-        return scanResult
+        return classGraph.scan()
                 .getClassesImplementing(GenericProducer.class.getName())
                 .stream()
                 .map(this::getClass)
@@ -51,7 +43,6 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
     }
 
     private void registerBean(BeanDefinitionRegistry registry, Class<?> beanClass) {
-        log.warn("registering bean {}", beanClass);
         String beanName = StringUtils.uncapitalize(beanClass.getSimpleName());
 
         GenericBeanDefinition proxyBeanDefinition = new GenericBeanDefinition();

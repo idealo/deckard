@@ -5,13 +5,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.context.annotation.Import;
-
-import de.idealo.deckard.configuration.KafkaProducerAutoConfiguration;
-import de.idealo.deckard.proxy.BeanDefinitionRegistrar;
-
+/**
+ * @deprecated <code>EnableKafkaProducers</code> is no longer required as the wiring is done with auto configuration.
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({ KafkaProducerAutoConfiguration.class, BeanDefinitionRegistrar.class /*,ProducerBeanRegistrar.class*/})
+@Deprecated
 public @interface EnableKafkaProducers {
 }
