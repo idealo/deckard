@@ -1,13 +1,8 @@
 package de.idealo.deckard.proxy;
 
-import static java.util.stream.StreamSupport.stream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.getRecords;
-
-import java.util.Map;
-
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.stereotype.KafkaProducer;
+import de.idealo.junit.rules.TestLoggerRuleFactory;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,9 +25,13 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import de.idealo.deckard.producer.GenericProducer;
-import de.idealo.deckard.stereotype.KafkaProducer;
-import de.idealo.junit.rules.TestLoggerRuleFactory;
+import java.util.Map;
+
+import static java.util.stream.StreamSupport.stream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.getRecords;
 
 
 @RunWith(SpringRunner.class)
@@ -74,7 +73,7 @@ public class ProxyBeanFactoryIT {
         });
     }
 
-    @KafkaProducer(topic = KAFKA_TEST_TOPIC)
+    @KafkaProducer(topic = KAFKA_TEST_TOPIC, serializer = IntegerSerializer.class)
     interface TestProducer extends GenericProducer<String, Integer> {
     }
 }
