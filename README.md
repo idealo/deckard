@@ -41,7 +41,7 @@ public interface MyProducer extends GenericProducer<String, MyDto> {}
 
 #### Samples
 
-You can find a showcase for deckard [in this sample project](ssh://git@code.eu.idealo.com:7999/uds/hack_day_declarative_kafka_producer_showcase.git).
+You can find a showcase for deckard [in this sample project](https://code.eu.idealo.com/projects/UDS/repos/hack_day_declarative_kafka_producer_showcase/browse).
 
 #### About the project
 
