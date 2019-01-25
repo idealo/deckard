@@ -8,15 +8,13 @@ idp_notifyRun mailTo, {
         String version = idp_createBuildVersion {
             message = 'increasing version number'
             gitRepoUrl = 'ssh://git@code.eu.idealo.com:7999/uds/deckard.git'
+            branch = 'master'
         }
         idp_buildReleasable {
             mavenVersion = 'apache-maven-3.5.0'
             artifactoryTargetRepo = 'libs-release-local'
             stashArtifactsIncludePattern = 'target/*.jar'
             stashArtifactsExcludePattern = 'target/*-stubs.jar, target/*-sources.jar'
-        }
-        idp_repoTag {
-            tagName = version
         }
     }
 }
