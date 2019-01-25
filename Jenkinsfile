@@ -7,12 +7,11 @@ String version
 
 idp_notifyRun mailTo, {
     node('java') {
-        idp_maven {
-            gitRepoUrl = repo
-            mavenGoals = mvnGoalSetVersion
-            stage = 'set version number'
+        String version = idp_createBuildVersion {
+            message = 'increasing version number'
+            gitRepoUrl = 'ssh://git@code.eu.idealo.com:7999/uds/deckard.git'
         }
-        version = idp_buildReleasable {
+        idp_buildReleasable {
             mavenVersion = 'apache-maven-3.5.0'
             artifactoryTargetRepo = 'libs-release-local'
             stashArtifactsIncludePattern = 'target/*.jar'
