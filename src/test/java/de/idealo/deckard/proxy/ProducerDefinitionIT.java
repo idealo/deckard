@@ -1,18 +1,20 @@
 package de.idealo.deckard.proxy;
 
-import de.idealo.deckard.producer.GenericProducer;
-import de.idealo.deckard.stereotype.KafkaProducer;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import static java.util.stream.StreamSupport.stream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+
+import java.util.Map;
+
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
+import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.LongSerializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.assertj.core.util.Lists;
 import org.awaitility.Duration;
 import org.junit.Before;
@@ -30,15 +32,19 @@ import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Map;
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.stereotype.KafkaProducer;
 
-import static java.util.stream.StreamSupport.stream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = {"spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}", "spring.kafka.producer.value-serializer: org.apache.kafka.common.serialization.IntegerSerializer"})
+@SpringBootTest(properties = {
+        "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "spring.kafka.producer.key-serializer: org.apache.kafka.common.serialization.LongSerializer",
+        "spring.kafka.producer.value-serializer: org.apache.kafka.common.serialization.IntegerSerializer"
+})
 @DirtiesContext
 public class ProducerDefinitionIT {
     private static final String KAFKA_TEST_TOPIC_INTEGER = "the.test.topic.integer";
@@ -57,36 +63,42 @@ public class ProducerDefinitionIT {
     @Autowired
     private ProducerDefinitionIT.TestConfig.IntegerProducer intProducer;
 
-    private Consumer<String, Integer> intConsumer;
-    private Consumer<String, Long> longConsumer;
-    private Consumer<String, TestDto> jsonConsumer;
+    private Consumer<Long, Integer> intConsumer;
+    private Consumer<Integer, Long> longConsumer;
+    private Consumer<TestDto, TestDto> jsonConsumer;
 
     @Before
     public void setUp() throws Exception {
-        intConsumer = createConsumer(IntegerDeserializer.class, KAFKA_TEST_TOPIC_INTEGER, "intConsumers");
-        longConsumer = createConsumer(LongDeserializer.class, KAFKA_TEST_TOPIC_LONG, "longConsumers");
-        jsonConsumer = createConsumer(JsonDeserializer.class, KAFKA_TEST_TOPIC_JSON, "jsonConsumer");
+        intConsumer = createConsumer(LongDeserializer.class, IntegerDeserializer.class, KAFKA_TEST_TOPIC_INTEGER, "intConsumers");
+        longConsumer = createConsumer(IntegerDeserializer.class, LongDeserializer.class, KAFKA_TEST_TOPIC_LONG, "longConsumers");
+        jsonConsumer = createConsumer(JsonDeserializer.class, JsonDeserializer.class, KAFKA_TEST_TOPIC_JSON, "jsonConsumer");
     }
 
     @Test
-    public void shouldConfigureAnnotatedProducerWithSerializerViaDefaultFromProperties() throws Exception {
-        intProducer.send(42);
+    public void shouldConfigureAnnotatedProducerWithSerializersViaDefaultFromProperties() throws Exception {
+        intProducer.send(23L, 42);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<String, Integer> records = intConsumer.poll(100);
+            ConsumerRecords<Long, Integer> records = intConsumer.poll(100);
             assertThat(records).hasSize(1);
-            stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(42));
+            stream(records.spliterator(), false).forEach(record -> {
+                        assertThat(record.key()).isEqualTo(23L);
+                        assertThat(record.value()).isEqualTo(42);
+                    });
         });
     }
 
     @Test
-    public void shouldConfigureAnnotatedProducerWithSerializerWithDefinedLongSerializer() throws Exception {
-        longProducer.send(12L);
+    public void shouldConfigureAnnotatedProducerWithSerializersWithDefinedLongSerializer() throws Exception {
+        longProducer.send( 24, 12L);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<String, Long> records = longConsumer.poll(100);
+            ConsumerRecords<Integer, Long> records = longConsumer.poll(100);
             assertThat(records).hasSize(1);
-            stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(12L));
+            stream(records.spliterator(), false).forEach(record -> {
+                assertThat(record.key()).isEqualTo(24);
+                assertThat(record.value()).isEqualTo(12L);
+            });
         });
     }
 
@@ -96,7 +108,7 @@ public class ProducerDefinitionIT {
         jsonProducer.send(dto);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<String, TestDto> records = jsonConsumer.poll(100);
+            ConsumerRecords<TestDto, TestDto> records = jsonConsumer.poll(100);
             assertThat(records).hasSize(1);
             stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(dto));
         });
@@ -104,29 +116,29 @@ public class ProducerDefinitionIT {
 
     @TestConfiguration
     public static class TestConfig {
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC_LONG, serializer = LongSerializer.class)
-        interface LongProducer extends GenericProducer<String, Long> {
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC_LONG, keySerializer = IntegerSerializer.class, valueSerializer = LongSerializer.class)
+        interface LongProducer extends GenericProducer<Integer, Long> {
         }
 
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC_JSON, serializer = JsonSerializer.class)
-        interface JsonProducer extends GenericProducer<String, TestDto> {
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC_JSON, keySerializer = JsonSerializer.class, valueSerializer = JsonSerializer.class)
+        interface JsonProducer extends GenericProducer<TestDto, TestDto> {
         }
 
         @KafkaProducer(topic = KAFKA_TEST_TOPIC_INTEGER)
-        interface IntegerProducer extends GenericProducer<String, Integer> {
+        interface IntegerProducer extends GenericProducer<Long, Integer> {
         }
     }
 
-    private <V> Consumer<String, V> createConsumer(Class valueDeserializer, String topic, String group) {
+    private <K, V> Consumer<K, V> createConsumer(Class keyDeserializer, Class valueDeserializer, String topic, String group) {
         Map<String, Object> consumerProps = consumerProps(group, "true", kafkaEmbedded);
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
         consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
-        ConsumerFactory<String, V> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
+        ConsumerFactory<K, V> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
 
-        Consumer<String, V> consumer = consumerFactory.createConsumer();
+        Consumer<K, V> consumer = consumerFactory.createConsumer();
         consumer.subscribe(Lists.newArrayList(topic));
         return consumer;
     }
