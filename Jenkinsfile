@@ -2,8 +2,6 @@
 
 String repo = "ssh://git@code.eu.idealo.com:7999/uds/deckard.git"
 String mailTo = 'team-postman@idealo.de'
-String mvnGoalSetVersion = "versions:set -DnewVersion=${BUILD_TIMESTAMP}"
-String version
 
 idp_notifyRun mailTo, {
     node('java') {
