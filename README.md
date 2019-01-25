@@ -12,8 +12,10 @@ This will provide your application with a functioning message producer for Kafka
 
 GenericProducer provides the following methods for your convenience
 
-    void send(MyDto data);
-    void send(String aKey, MyDto data);
+````java
+void send(MyDto data);
+void send(String aKey, MyDto data);
+````
 
 
 ### How To:
@@ -29,14 +31,17 @@ bootstrapping mechanism.
 
 ### Notes:
 #### Serializers
-Right now, the default value serializer is the `StringSerializer`. 
-If you want something else (like `JsonSerializer`) you can just define it in your application yaml.
-As of now, Deckard supports only one serializer per application, i.e. all producers in your app will
-utilize the specified serializer.
+You may set a default serializer for your keys and values as usual via the Spring Kafka properties. 
+However, if you want to use different serializers on individual producers, you can also specify them in the producer definition:
+
+````java
+@KafkaProducer(topic="my.topic", keySerializer = LongSerializer.class, valueSerializer = JsonSerializer.class)
+public interface MyProducer extends GenericProducer<String, MyDto> {}
+````
 
 #### Samples
 
-You can find a showcase for deckard here: ssh://git@code.eu.idealo.com:7999/uds/hack_day_declarative_kafka_producer_showcase.git
+You can find a showcase for deckard [in this sample project](ssh://git@code.eu.idealo.com:7999/uds/hack_day_declarative_kafka_producer_showcase.git).
 
 #### About the project
 
@@ -53,6 +58,5 @@ Team Postman will continue to develop this, since we're already using it in prod
 __However, you are welcome to join in with your ideas and create pull requests!__
 
 #### Planned Features:
-- configurable, individual Serializers per Producer
 - integration of Kafka Encryption as provided by team SSO
 - IDE integration
