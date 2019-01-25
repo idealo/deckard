@@ -1,27 +1,25 @@
 package de.idealo.deckard.proxy;
 
-import static de.idealo.deckard.util.CaseUtil.splitCamelCase;
-import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.joining;
-import static org.springframework.util.StringUtils.hasText;
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.producer.Producer;
+import de.idealo.deckard.stereotype.KafkaProducer;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-
-import de.idealo.deckard.producer.GenericProducer;
-import de.idealo.deckard.producer.Producer;
-import de.idealo.deckard.stereotype.KafkaProducer;
-
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
+import static de.idealo.deckard.util.CaseUtil.splitCamelCase;
+import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.joining;
+import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -60,13 +58,13 @@ public class ProxyBeanFactory {
     }
 
     @Value
-    private class ProducerDefinition<T extends GenericProducer> {
+    private final class ProducerDefinition<T extends GenericProducer> {
 
         private final String topic;
         private final Class keySerializer;
         private final Class valueSerializer;
 
-        private ProducerDefinition(final Class<T> producerClass) {
+        ProducerDefinition(final Class<T> producerClass) {
             final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
             this.topic = retrieveTopic(producerClass, kafkaProducer);
             this.keySerializer = retrieveKeySerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getKeySerializer());
