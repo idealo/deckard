@@ -1,8 +1,11 @@
 package de.idealo.deckard.proxy;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
-
+import de.idealo.deckard.producer.GenericProducer;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -11,17 +14,14 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.StringUtils;
 
-import de.idealo.deckard.producer.GenericProducer;
-
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
-    private final ClassGraph classGraph = new ClassGraph().disableJarScanning().enableAllInfo();
+    private final ClassGraph classGraph = new ClassGraph().enableAllInfo();
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
@@ -30,11 +30,15 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
     }
 
     private Collection<Class<?>> getProducerClasses() {
-        return classGraph.scan()
+        ScanResult scanResult = classGraph.scan();
+        List<Class<?>> classList = scanResult
                 .getClassesImplementing(GenericProducer.class.getName())
                 .stream()
                 .map(this::getClass)
                 .collect(Collectors.toList());
+
+        scanResult.close();
+        return classList;
     }
 
     @SneakyThrows
