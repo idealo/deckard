@@ -5,7 +5,7 @@
 
   <groupId>de.idealo</groupId>
   <artifactId>deckard</artifactId>
-  <version>0.4.0</version>
+  <version>0.6.0</version>
   <packaging>jar</packaging>
 
   <name>Deckard - Declarative Kafka Resource Definitions</name>
@@ -64,7 +64,7 @@
     <dependency>
       <groupId>io.github.classgraph</groupId>
       <artifactId>classgraph</artifactId>
-      <version>4.6.18</version>
+      <version>4.6.32</version>
     </dependency>
 
   </dependencies>
