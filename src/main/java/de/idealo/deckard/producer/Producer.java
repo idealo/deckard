@@ -18,4 +18,8 @@ public class Producer<K, V> {
     public void send(K key, V value) {
         template.send(topic, key, value);
     }
+
+    public void sendEmpty(K key) {
+        template.send(topic, key, null);
+    }
 }

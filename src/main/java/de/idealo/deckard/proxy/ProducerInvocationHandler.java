@@ -21,6 +21,8 @@ public class ProducerInvocationHandler<K, V> implements InvocationHandler {
             } else if (args.length == MAX_NUMBER_OF_ARGUMENTS) {
                 producer.send((K) args[0], (V) args[1]);
             }
+        } else if ("sendEmpty".equals(method.getName())) {
+            producer.sendEmpty((K) args[0]);
         }
 
         return 0;
