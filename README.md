@@ -13,8 +13,9 @@ This will provide your application with a functioning message producer for Kafka
 GenericProducer provides the following methods for your convenience
 
 ````java
-void send(MyDto data);
-void send(String aKey, MyDto data);
+void send(V data)
+void send(K messageKey, V data)
+void sendEmpty(K messageKey) // sends tomb stone message 
 ````
 
 
