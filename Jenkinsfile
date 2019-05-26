@@ -5,11 +5,6 @@ String mailTo = 'team-postman@idealo.de'
 
 idp_notifyRun mailTo, {
     node('java') {
-        String version = idp_createBuildVersion {
-            message = 'increasing version number'
-            gitRepoUrl = 'ssh://git@code.eu.idealo.com:7999/uds/deckard.git'
-            branch = 'spring-kafka-2.2'
-        }
         idp_buildReleasable {
             mavenVersion = 'apache-maven-3.5.0'
             artifactoryTargetRepo = 'libs-release-local'
