@@ -8,7 +8,7 @@ idp_notifyRun mailTo, {
         String version = idp_createBuildVersion {
             message = 'increasing version number'
             gitRepoUrl = 'ssh://git@code.eu.idealo.com:7999/uds/deckard.git'
-            branch = 'master'
+            branch = 'spring-kafka-2.2'
         }
         idp_buildReleasable {
             mavenVersion = 'apache-maven-3.5.0'
