@@ -5,7 +5,7 @@
 
   <groupId>de.idealo</groupId>
   <artifactId>deckard</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <packaging>jar</packaging>
 
   <name>Deckard - Declarative Kafka Resource Definitions</name>
