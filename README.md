@@ -49,7 +49,7 @@ You can find a showcase for deckard [in this sample project](https://code.eu.ide
 #### Notes on Versioning and Compatibility
 
 Deckard was originally built on Spring Kafka 2.0.x which is only compatible with Spring Boot 2.0.x.
-To go forward with development for Spring Boot 2.1.x, but also support projects based on Spring Boot 1.5, we introduced the following versioning scheme:
+To go forward with development for Spring Boot 2.1.x, but also support projects based on Spring Boot 2.0.x, we introduced the following versioning scheme:
 
 - 0.x -> supports Spring Kafka 2.1.x and is compatible with Spring Boot 2.0.x
 - 1.x -> supports Spring Kafka 2.2.x and is compatible with Spring Boot 2.1.x
