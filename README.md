@@ -1,6 +1,9 @@
 # Deckard
 ## Declarative Kafka Resource Definitions
 
+This library provides an easy solution to write messages to Kafka in a purely declarative and transparent manner.
+It lets you write Kafka messages without having to worry much about complicated configurations. 
+
 The Deckard library enables you to easily create Kafka producers by just declaring interfaces like this:
 
 ````java
@@ -17,7 +20,6 @@ void send(V data)
 void send(K messageKey, V data)
 void sendEmpty(K messageKey) // sends tomb stone message 
 ````
-
 
 ### How To:
 
@@ -43,6 +45,16 @@ public interface MyProducer extends GenericProducer<String, MyDto> {}
 #### Samples
 
 You can find a showcase for deckard [in this sample project](https://code.eu.idealo.com/projects/UDS/repos/hack_day_declarative_kafka_producer_showcase/browse).
+
+#### Notes on Versioning and Compatibility
+
+Deckard was originally built on Spring Kafka 2.0.x which is only compatible with Spring Boot 2.0.x.
+To go forward with development for Spring Boot 2.1.x, but also support projects based on Spring Boot 1.5, we introduced the following versioning scheme:
+
+- 0.x -> supports Spring Kafka 2.1.x and is compatible with Spring Boot 2.0.x
+- 1.x -> supports Spring Kafka 2.2.x and is compatible with Spring Boot 2.1.x
+
+We will try to add new features in both versions as long as possible.
 
 #### About the project
 
