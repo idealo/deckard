@@ -1,6 +1,9 @@
 # Deckard
 ## Declarative Kafka Resource Definitions
 
+This library provides an easy solution to write messages to Kafka in a purely declarative and transparent manner.
+It lets you write Kafka messages without having to worry much about complicated configurations. 
+
 The Deckard library enables you to easily create Kafka producers by just declaring interfaces like this:
 
 ````java
@@ -17,7 +20,6 @@ void send(V data)
 void send(K messageKey, V data)
 void sendEmpty(K messageKey) // sends tomb stone message 
 ````
-
 
 ### How To:
 
