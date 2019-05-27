@@ -28,6 +28,7 @@ jpf_notifyRun mailto, {
             artifactoryTargetRepo = 'libs-release-local'
             stashArtifacts = 'false'
             mavenSkipClean = 'true'
+            sonarqubeHostUrl = 'https://analysis.eu.idealo.com'
         }
 
         jpf_createBuildVersion {
