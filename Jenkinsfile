@@ -25,7 +25,6 @@ jpf_notifyRun mailto, {
         jpf_buildReleasable {
             message = "building the releasable for version ${inputVersion}"
             branch = 'spring-kafka-2.2'
-            mavenProfiles = ['sonar-coverage']
             artifactoryTargetRepo = 'libs-release-local'
             stashArtifacts = 'false'
             mavenSkipClean = 'true'
