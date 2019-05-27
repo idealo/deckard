@@ -1,15 +1,39 @@
-@Library('idp@0.17.0')
+library identifier: 'jpf@0.9.0', changelog: false, retriever: modernSCM([$class: 'GitSCMSource', remote: 'ssh://git@code.eu.idealo.com:7999/hpi/jenkins-pipeline-functions.git'])
 
-String repo = "ssh://git@code.eu.idealo.com:7999/uds/deckard.git"
-String mailTo = 'team-postman@idealo.de'
+String sourceCloneUrl = 'ssh://git@code.eu.idealo.com:7999/uds/deckard.git'
+String mailto = 'team-postman@idealo.de'
 
-idp_notifyRun mailTo, {
-    node('java') {
-        idp_buildReleasable {
-            mavenVersion = 'apache-maven-3.5.0'
+jpf_notifyRun mailto, {
+
+    node('java-ephemeral') {
+        def pom = jpf_getPomProperties {
+            gitRepoUrl = sourceCloneUrl
+            branch = 'spring-kafka-2.2'
+        }
+
+        String inputVersion = jpf_getUserInput {
+            message = 'asking release version'
+            defaultValue = ' '
+            description = "Which version shall be used for the release (current: ${pom.version})?"
+        }
+
+        jpf_maven {
+            message = "setting property 'idealo-springboot.version' to ${inputVersion}"
+            mavenGoals = "versions:set -DartifactId=deckard -DnewVersion=${inputVersion}"
+        }
+
+        jpf_buildReleasable {
+            message = "building the releasable for version ${inputVersion}"
+            branch = 'spring-kafka-2.2'
+            mavenProfiles = ['sonar-coverage']
             artifactoryTargetRepo = 'libs-release-local'
-            stashArtifactsIncludePattern = 'target/*.jar'
-            stashArtifactsExcludePattern = 'target/*-stubs.jar, target/*-sources.jar'
+            stashArtifacts = 'false'
+            mavenSkipClean = 'true'
+        }
+
+        jpf_createBuildVersionIdealoSpringbootParent {
+        	message = 'creating tag'
+            branch = 'spring-kafka-2.2'
         }
     }
 }
