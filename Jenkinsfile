@@ -18,7 +18,7 @@ jpf_notifyRun mailto, {
         }
 
         jpf_maven {
-            message = "setting property 'idealo-springboot.version' to ${inputVersion}"
+            message = "setting property version to ${inputVersion}"
             mavenGoals = "versions:set -DartifactId=deckard -DnewVersion=${inputVersion}"
         }
 
@@ -31,7 +31,7 @@ jpf_notifyRun mailto, {
             mavenSkipClean = 'true'
         }
 
-        jpf_createBuildVersionIdealoSpringbootParent {
+        jpf_createBuildVersion {
         	message = 'creating tag'
             branch = 'spring-kafka-2.2'
         }
