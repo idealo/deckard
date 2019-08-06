@@ -1,6 +1,6 @@
 package de.idealo.deckard.configuration;
 
-import de.idealo.deckard.proxy.ProxyBeanFactory;
+import de.idealo.deckard.proxy.ProducerProxyBeanFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -19,13 +19,13 @@ public class KafkaProducerAutoConfiguration {
     @Autowired(required = false)
     private KafkaProperties kafkaProperties;
 
-    @Bean("proxyBeanFactory")
-    ProxyBeanFactory proxyBeanFactory() {
+    @Bean("producerProxyBeanFactory")
+    ProducerProxyBeanFactory proxyBeanFactory() {
         KafkaProperties properties = Optional.ofNullable(this.kafkaProperties).orElseGet(() -> {
             log.warn("KafkaProperties were not provided by Spring, creating default. This should only happen in test scenarios.");
             return new KafkaProperties();
         });
 
-        return new ProxyBeanFactory(properties);
+        return new ProducerProxyBeanFactory(properties);
     }
 }

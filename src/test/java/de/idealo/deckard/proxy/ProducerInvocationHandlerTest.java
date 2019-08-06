@@ -62,6 +62,13 @@ public class ProducerInvocationHandlerTest {
         verify(producer).sendEmpty(eq(MESSAGE_KEY));
     }
 
+    @Test
+    public void shouldCallClose() throws NoSuchMethodException {
+        handler.invoke(mock(TestInterface.class), Producer.class.getMethod("close"), null);
+
+        verify(producer).close();
+    }
+
     @Test(expected = IllegalArgumentException.class)
     @Ignore
     public void shouldCheckNumberOfArguments() throws Throwable {
