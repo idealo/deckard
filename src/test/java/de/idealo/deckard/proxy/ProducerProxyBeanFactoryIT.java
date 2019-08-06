@@ -33,7 +33,7 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.getRecords;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {"spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}"})
-public class ProxyBeanFactoryIT {
+public class ProducerProxyBeanFactoryIT {
 
     private static final String KAFKA_TEST_TOPIC = "the.test.topic";
 
