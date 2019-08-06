@@ -23,7 +23,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @RequiredArgsConstructor
-public class ProxyBeanFactory {
+public class ProducerProxyBeanFactory {
 
     private static final Predicate<String> NOT_RESERVED = word -> !word.equalsIgnoreCase("Producer");
 
