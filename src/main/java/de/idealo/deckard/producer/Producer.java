@@ -22,4 +22,8 @@ public class Producer<K, V> {
     public void sendEmpty(K key) {
         template.send(topic, key, null);
     }
+
+    public void close() {
+        template.flush();
+    }
 }

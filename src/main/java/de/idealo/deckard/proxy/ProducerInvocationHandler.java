@@ -23,6 +23,8 @@ public class ProducerInvocationHandler<K, V> implements InvocationHandler {
             }
         } else if ("sendEmpty".equals(method.getName())) {
             producer.sendEmpty((K) args[0]);
+        } else if ("close".equals(method.getName())) {
+            producer.close();
         }
 
         return 0;
