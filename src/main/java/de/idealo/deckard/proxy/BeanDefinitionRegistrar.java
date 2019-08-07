@@ -58,7 +58,7 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
         args.addGenericArgumentValue(beanClass);
         proxyBeanDefinition.setConstructorArgumentValues(args);
 
-        proxyBeanDefinition.setFactoryBeanName("producerProxyBeanFactory");
+        proxyBeanDefinition.setFactoryBeanName(ProducerProxyBeanFactory.DEFAULT_FACTORY_BEAN_NAME);
         proxyBeanDefinition.setFactoryMethodName("createBean");
         proxyBeanDefinition.setDestroyMethodName("close");
         proxyBeanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
