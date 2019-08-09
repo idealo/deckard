@@ -19,7 +19,7 @@ public class KafkaProducerAutoConfiguration {
     @Autowired(required = false)
     private KafkaProperties kafkaProperties;
 
-    @Bean("producerProxyBeanFactory")
+    @Bean(ProducerProxyBeanFactory.DEFAULT_FACTORY_BEAN_NAME)
     ProducerProxyBeanFactory proxyBeanFactory() {
         KafkaProperties properties = Optional.ofNullable(this.kafkaProperties).orElseGet(() -> {
             log.warn("KafkaProperties were not provided by Spring, creating default. This should only happen in test scenarios.");
