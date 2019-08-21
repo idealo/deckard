@@ -6,7 +6,10 @@ import de.idealo.deckard.stereotype.KafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanExpressionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.beans.factory.config.EmbeddedValueResolver;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -26,10 +29,10 @@ import static org.springframework.util.StringUtils.hasText;
 public class ProducerProxyBeanFactory {
 
     public static final String DEFAULT_FACTORY_BEAN_NAME = "producerProxyBeanFactory";
-
     private static final Predicate<String> NOT_RESERVED = word -> !word.equalsIgnoreCase("Producer");
 
     private final KafkaProperties kafkaProperties;
+    private final ConfigurableBeanFactory configurableBeanFactory;
 
     @SuppressWarnings("unchecked")
     public <K, V, T extends GenericProducer<K, V>> T createBean(ClassLoader classLoader, Class<T> producerClass) {
@@ -75,7 +78,18 @@ public class ProducerProxyBeanFactory {
 
         private String retrieveTopic(Class<T> producerClass, final KafkaProducer kafkaProducer) {
             if (isTopicDefined(kafkaProducer)) {
-                return kafkaProducer.topic();
+                String topicName = kafkaProducer.topic();
+
+                if (topicName.startsWith("${") && topicName.endsWith("}")) {
+                    try {
+                        EmbeddedValueResolver embeddedValueResolver = new EmbeddedValueResolver(configurableBeanFactory);
+                        return embeddedValueResolver.resolveStringValue(topicName);
+                    } catch (BeanExpressionException e) {
+                        log.error("Failed to parse expression {}.", topicName, e);
+                    }
+                }
+
+                return topicName;
             }
             return generateTopicNameFromProducerClassName(producerClass);
         }
