@@ -1,12 +1,10 @@
 package de.idealo.deckard.proxy;
 
-import static java.util.stream.StreamSupport.stream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
-
-import java.util.Map;
-
+import de.idealo.deckard.producer.GenericProducer;
+import de.idealo.deckard.stereotype.KafkaProducer;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -32,27 +30,29 @@ import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import de.idealo.deckard.producer.GenericProducer;
-import de.idealo.deckard.stereotype.KafkaProducer;
+import java.util.Map;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import static java.util.stream.StreamSupport.stream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {
         "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
-        "spring.kafka.producer.key-serializer: org.apache.kafka.common.serialization.LongSerializer",
-        "spring.kafka.producer.value-serializer: org.apache.kafka.common.serialization.IntegerSerializer"
+        "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.LongSerializer",
+        "spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.IntegerSerializer",
+        "spel.test.topic=the.test.topic.from.spel"
 })
 @DirtiesContext
 public class ProducerDefinitionIT {
     private static final String KAFKA_TEST_TOPIC_INTEGER = "the.test.topic.integer";
     private static final String KAFKA_TEST_TOPIC_LONG = "the.test.topic.long";
     private static final String KAFKA_TEST_TOPIC_JSON = "the.test.topic.json";
+    private static final String KAFKA_TEST_TOPIC_FROM_SPEL = "the.test.topic.from.spel";
 
     @ClassRule
-    public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC_INTEGER, KAFKA_TEST_TOPIC_LONG, KAFKA_TEST_TOPIC_JSON);
+    public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC_INTEGER, KAFKA_TEST_TOPIC_LONG, KAFKA_TEST_TOPIC_JSON, KAFKA_TEST_TOPIC_FROM_SPEL);
 
     @Autowired
     private ProducerDefinitionIT.TestConfig.LongProducer longProducer;
@@ -63,15 +63,20 @@ public class ProducerDefinitionIT {
     @Autowired
     private ProducerDefinitionIT.TestConfig.IntegerProducer intProducer;
 
+    @Autowired
+    private ProducerDefinitionIT.TestConfig.SpelProducer spelProducer;
+
     private Consumer<Long, Integer> intConsumer;
     private Consumer<Integer, Long> longConsumer;
     private Consumer<TestDto, TestDto> jsonConsumer;
+    private Consumer<TestDto, TestDto> spelConsumer;
 
     @Before
     public void setUp() throws Exception {
         intConsumer = createConsumer(LongDeserializer.class, IntegerDeserializer.class, KAFKA_TEST_TOPIC_INTEGER, "intConsumers");
         longConsumer = createConsumer(IntegerDeserializer.class, LongDeserializer.class, KAFKA_TEST_TOPIC_LONG, "longConsumers");
         jsonConsumer = createConsumer(JsonDeserializer.class, JsonDeserializer.class, KAFKA_TEST_TOPIC_JSON, "jsonConsumer");
+        spelConsumer = createConsumer(JsonDeserializer.class, JsonDeserializer.class, KAFKA_TEST_TOPIC_FROM_SPEL, "spelConsumer");
     }
 
     @Test
@@ -114,18 +119,34 @@ public class ProducerDefinitionIT {
         });
     }
 
+    @Test
+    public void shouldConfigureAnnotatedProducerWithTopicFromSpelExpression() {
+        TestDto dto = new TestDto("Hello.");
+        spelProducer.send(dto);
+
+        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
+            ConsumerRecords<TestDto, TestDto> records = spelConsumer.poll(100);
+            assertThat(records).hasSize(1);
+            stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(dto));
+        });
+    }
+
     @TestConfiguration
     public static class TestConfig {
         @KafkaProducer(topic = KAFKA_TEST_TOPIC_LONG, keySerializer = IntegerSerializer.class, valueSerializer = LongSerializer.class)
         interface LongProducer extends GenericProducer<Integer, Long> {
         }
 
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC_INTEGER)
+        interface IntegerProducer extends GenericProducer<Long, Integer> {
+        }
+
         @KafkaProducer(topic = KAFKA_TEST_TOPIC_JSON, keySerializer = JsonSerializer.class, valueSerializer = JsonSerializer.class)
         interface JsonProducer extends GenericProducer<TestDto, TestDto> {
         }
 
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC_INTEGER)
-        interface IntegerProducer extends GenericProducer<Long, Integer> {
+        @KafkaProducer(topic = "${spel.test.topic}", keySerializer = JsonSerializer.class, valueSerializer = JsonSerializer.class)
+        interface SpelProducer extends GenericProducer<TestDto, TestDto> {
         }
     }
 
