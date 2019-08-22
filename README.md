@@ -7,7 +7,7 @@ It lets you write Kafka messages without having to worry much about complicated 
 The Deckard library enables you to easily create Kafka producers by just declaring interfaces like this:
 
 ````java
-@KafkaProducer(topic="my.topic")
+@KafkaProducer(topic = "my.topic")
 public interface MyProducer extends GenericProducer<String, MyDto> {}
 ````
 
@@ -38,9 +38,17 @@ You may set a default serializer for your keys and values as usual via the Sprin
 However, if you want to use different serializers on individual producers, you can also specify them in the producer definition:
 
 ````java
-@KafkaProducer(topic="my.topic", keySerializer = LongSerializer.class, valueSerializer = JsonSerializer.class)
+@KafkaProducer(topic = "my.topic", keySerializer = LongSerializer.class, valueSerializer = JsonSerializer.class)
 public interface MyProducer extends GenericProducer<String, MyDto> {}
 ````
+
+#### Property Placeholder Support
+The parameter `topic` is also able to resolve property placeholders:
+````java
+@KafkaProducer(topic = "${topic.name.from.property}")
+public interface MyProducer extends GenericProducer<String, String> {}
+````
+  
 
 #### Samples
 
