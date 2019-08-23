@@ -19,12 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static de.idealo.deckard.util.CaseUtil.splitCamelCase;
-import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
@@ -128,7 +131,19 @@ public class ProducerProxyBeanFactory {
 
         private Optional<List<String>> retrieveBootstrapServers(KafkaProducer kafkaProducer) {
             if (isBootstrapServersDefined(kafkaProducer)) {
-                return Optional.of(asList(kafkaProducer.bootstrapServers()));
+                final List<String> servers = stream(kafkaProducer.bootstrapServers()).flatMap(value -> {
+                    String resolvedValue = value;
+                    if (value.startsWith("${") && value.endsWith("}")) {
+                        try {
+                            EmbeddedValueResolver embeddedValueResolver = new EmbeddedValueResolver(configurableBeanFactory);
+                            resolvedValue = requireNonNull(embeddedValueResolver.resolveStringValue(value));
+                        } catch (BeanExpressionException e) {
+                            log.error("Failed to parse expression {}.", value, e);
+                        }
+                    }
+                    return Stream.of(resolvedValue.split(","));
+                }).collect(toList());
+                return Optional.of(servers);
             }
             return Optional.empty();
         }
