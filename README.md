@@ -51,9 +51,13 @@ If you need to define different bootstrap servers per KafkaProducer, you can als
 @KafkaProducer(topic = "my.topic", bootstrapServers = "localhost:9092")
 public interface MyProducer extends GenericProducer<String, MyDto> {}
 ````
+````java
+@KafkaProducer(topic = "my.topic", bootstrapServers = {"192.168.1.1:9092", "192.168.1.2:9092"})
+public interface MyProducer extends GenericProducer<String, MyDto> {}
+````
 
 #### Property Placeholder Support
-The parameters `topic` and bootstrapServers are also able to resolve property placeholders:
+The parameters `topic` and `bootstrapServers` are also able to resolve property placeholders:
 ````java
 @KafkaProducer(topic = "${topic.name.from.property}", bootstrapServers = "${bootstrap-servers.from.property}")
 public interface MyProducer extends GenericProducer<String, String> {}
