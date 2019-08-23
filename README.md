@@ -42,10 +42,20 @@ However, if you want to use different serializers on individual producers, you c
 public interface MyProducer extends GenericProducer<String, MyDto> {}
 ````
 
-#### Property Placeholder Support
-The parameter `topic` is also able to resolve property placeholders:
+#### Bootstrap Servers
+Per default, KafkaProducers will use bootstrap servers resolved from the KafkaProperties where producer bootstrap servers 
+from `spring.kafka.producer.bootstrap-servers` overwrite global bootstrap servers from `spring.kafka.bootstrap-servers`. 
+If you need to define different bootstrap servers per KafkaProducer, you can also specify them in the producer definition:
+ 
 ````java
-@KafkaProducer(topic = "${topic.name.from.property}")
+@KafkaProducer(topic = "my.topic", bootstrapServers = "localhost:9092")
+public interface MyProducer extends GenericProducer<String, MyDto> {}
+````
+
+#### Property Placeholder Support
+The parameters `topic` and bootstrapServers are also able to resolve property placeholders:
+````java
+@KafkaProducer(topic = "${topic.name.from.property}", bootstrapServers = "${bootstrap-servers.from.property}")
 public interface MyProducer extends GenericProducer<String, String> {}
 ````
   
