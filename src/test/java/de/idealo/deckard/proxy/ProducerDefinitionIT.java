@@ -72,7 +72,7 @@ public class ProducerDefinitionIT {
     private Consumer<TestDto, TestDto> spelConsumer;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         intConsumer = createConsumer(LongDeserializer.class, IntegerDeserializer.class, KAFKA_TEST_TOPIC_INTEGER, "intConsumers");
         longConsumer = createConsumer(IntegerDeserializer.class, LongDeserializer.class, KAFKA_TEST_TOPIC_LONG, "longConsumers");
         jsonConsumer = createConsumer(JsonDeserializer.class, JsonDeserializer.class, KAFKA_TEST_TOPIC_JSON, "jsonConsumer");
@@ -87,15 +87,15 @@ public class ProducerDefinitionIT {
             ConsumerRecords<Long, Integer> records = intConsumer.poll(100);
             assertThat(records).hasSize(1);
             stream(records.spliterator(), false).forEach(record -> {
-                        assertThat(record.key()).isEqualTo(23L);
-                        assertThat(record.value()).isEqualTo(42);
-                    });
+                assertThat(record.key()).isEqualTo(23L);
+                assertThat(record.value()).isEqualTo(42);
+            });
         });
     }
 
     @Test
     public void shouldConfigureAnnotatedProducerWithSerializersWithDefinedLongSerializer() throws Exception {
-        longProducer.send( 24, 12L);
+        longProducer.send(24, 12L);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
             ConsumerRecords<Integer, Long> records = longConsumer.poll(100);

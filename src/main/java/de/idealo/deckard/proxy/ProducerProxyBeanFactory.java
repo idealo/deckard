@@ -15,13 +15,19 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static de.idealo.deckard.util.CaseUtil.splitCamelCase;
+import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
@@ -56,6 +62,7 @@ public class ProducerProxyBeanFactory {
         Map<String, Object> producerProps = properties.buildProducerProperties();
         producerProps.put("key.serializer", producerDefinition.getKeySerializer());
         producerProps.put("value.serializer", producerDefinition.getValueSerializer());
+        producerProps.put("bootstrap.servers", producerDefinition.getBootstrapServers());
 
         DefaultKafkaProducerFactory<K, V> producerFactory = new DefaultKafkaProducerFactory<>(producerProps);
 
@@ -68,12 +75,14 @@ public class ProducerProxyBeanFactory {
         private final String topic;
         private final Class keySerializer;
         private final Class valueSerializer;
+        private final List<String> bootstrapServers;
 
         ProducerDefinition(final Class<T> producerClass) {
             final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
             this.topic = retrieveTopic(producerClass, kafkaProducer);
             this.keySerializer = retrieveKeySerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getKeySerializer());
             this.valueSerializer = retrieveValueSerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getValueSerializer());
+            this.bootstrapServers = retrieveBootstrapServers(kafkaProducer).orElseGet(() -> retrieveDefaultProducerBootstrapServers(kafkaProperties));
         }
 
         private String retrieveTopic(Class<T> producerClass, final KafkaProducer kafkaProducer) {
@@ -114,10 +123,39 @@ public class ProducerProxyBeanFactory {
         }
 
         private Optional<Class> retrieveValueSerializer(KafkaProducer kafkaProducer) {
-            if (isValueSerializerDefined(kafkaProducer)){
+            if (isValueSerializerDefined(kafkaProducer)) {
                 return Optional.of(kafkaProducer.valueSerializer());
             }
             return Optional.empty();
+        }
+
+        private Optional<List<String>> retrieveBootstrapServers(KafkaProducer kafkaProducer) {
+            if (isBootstrapServersDefined(kafkaProducer)) {
+                final List<String> servers = stream(kafkaProducer.bootstrapServers()).flatMap(value -> {
+                    String resolvedValue = value;
+                    if (value.startsWith("${") && value.endsWith("}")) {
+                        try {
+                            EmbeddedValueResolver embeddedValueResolver = new EmbeddedValueResolver(configurableBeanFactory);
+                            resolvedValue = requireNonNull(embeddedValueResolver.resolveStringValue(value));
+                        } catch (BeanExpressionException e) {
+                            log.error("Failed to parse expression {}.", value, e);
+                        }
+                    }
+                    return Stream.of(resolvedValue.split(","));
+                }).collect(toList());
+                return Optional.of(servers);
+            }
+            return Optional.empty();
+        }
+
+        private List<String> retrieveDefaultProducerBootstrapServers(KafkaProperties kafkaProperties) {
+            final List<String> producerBootstrapServers = Optional.ofNullable(kafkaProperties.getProducer().getBootstrapServers()).orElse(emptyList());
+            final List<String> globalBootstrapServers = kafkaProperties.getBootstrapServers();
+            return producerBootstrapServers.isEmpty() ? globalBootstrapServers : producerBootstrapServers;
+        }
+
+        private boolean isBootstrapServersDefined(KafkaProducer kafkaProducer) {
+            return kafkaProducer.bootstrapServers().length > 0;
         }
 
         private boolean isValueSerializerDefined(final KafkaProducer kafkaProducer) {
