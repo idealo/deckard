@@ -6,6 +6,7 @@ import de.idealo.deckard.stereotype.KafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.serialization.Serializer;
 import org.springframework.beans.factory.BeanExpressionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -41,7 +42,7 @@ public class ProducerProxyBeanFactory {
     private final ConfigurableBeanFactory configurableBeanFactory;
 
     @SuppressWarnings("unchecked")
-    public <K, V, T extends GenericProducer<K, V>> T createBean(ClassLoader classLoader, Class<T> producerClass) {
+    public <K, V, T extends GenericProducer<K, V>> T createBean(ClassLoader classLoader, Class<T> producerClass) throws InstantiationException, IllegalAccessException {
         ProducerDefinition producerDefinition = new ProducerDefinition(producerClass);
 
         KafkaTemplate<K, V> template = createTemplate(kafkaProperties, producerDefinition);
@@ -60,28 +61,26 @@ public class ProducerProxyBeanFactory {
         });
 
         Map<String, Object> producerProps = properties.buildProducerProperties();
-        producerProps.put("key.serializer", producerDefinition.getKeySerializer());
-        producerProps.put("value.serializer", producerDefinition.getValueSerializer());
         producerProps.put("bootstrap.servers", producerDefinition.getBootstrapServers());
 
-        DefaultKafkaProducerFactory<K, V> producerFactory = new DefaultKafkaProducerFactory<>(producerProps);
+        DefaultKafkaProducerFactory<K, V> producerFactory = new DefaultKafkaProducerFactory<>(producerProps, producerDefinition.getKeySerializer(), producerDefinition.getValueSerializer());
 
         return new KafkaTemplate<>(producerFactory);
     }
 
     @Value
-    private final class ProducerDefinition<T extends GenericProducer> {
+    private final class ProducerDefinition<K, V, T extends GenericProducer> {
 
         private final String topic;
-        private final Class keySerializer;
-        private final Class valueSerializer;
+        private final Serializer<K> keySerializer;
+        private final Serializer<V> valueSerializer;
         private final List<String> bootstrapServers;
 
-        ProducerDefinition(final Class<T> producerClass) {
+        ProducerDefinition(final Class<T> producerClass) throws IllegalAccessException, InstantiationException {
             final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
             this.topic = retrieveTopic(producerClass, kafkaProducer);
-            this.keySerializer = retrieveKeySerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getKeySerializer());
-            this.valueSerializer = retrieveValueSerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getValueSerializer());
+            this.keySerializer = (Serializer<K>) retrieveKeySerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getKeySerializer()).newInstance();
+            this.valueSerializer = (Serializer<V>) retrieveValueSerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getValueSerializer()).newInstance();
             this.bootstrapServers = retrieveBootstrapServers(kafkaProducer).orElseGet(() -> retrieveDefaultProducerBootstrapServers(kafkaProperties));
         }
 
