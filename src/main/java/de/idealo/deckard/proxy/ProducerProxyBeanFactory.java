@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.config.EmbeddedValueResolver;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -40,6 +41,7 @@ public class ProducerProxyBeanFactory {
 
     private final KafkaProperties kafkaProperties;
     private final ConfigurableBeanFactory configurableBeanFactory;
+    private final ApplicationContext applicationContext;
 
     @SuppressWarnings("unchecked")
     public <K, V, T extends GenericProducer<K, V>> T createBean(ClassLoader classLoader, Class<T> producerClass) throws InstantiationException, IllegalAccessException {
@@ -79,8 +81,14 @@ public class ProducerProxyBeanFactory {
         ProducerDefinition(final Class<T> producerClass) throws IllegalAccessException, InstantiationException {
             final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
             this.topic = retrieveTopic(producerClass, kafkaProducer);
-            this.keySerializer = (Serializer<K>) retrieveKeySerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getKeySerializer()).newInstance();
-            this.valueSerializer = (Serializer<V>) retrieveValueSerializer(kafkaProducer).orElse(kafkaProperties.getProducer().getValueSerializer()).newInstance();
+            this.keySerializer = retrieveKeySerializerBean(kafkaProducer)
+                    .orElse((Serializer<K>) retrieveKeySerializerClass(kafkaProducer)
+                            .orElse(kafkaProperties.getProducer().getKeySerializer()).newInstance()
+                    );
+            this.valueSerializer = retrieveValueSerializerBean(kafkaProducer)
+                    .orElse((Serializer<V>) retrieveValueSerializerClass(kafkaProducer)
+                            .orElse(kafkaProperties.getProducer().getValueSerializer()).newInstance()
+                    );
             this.bootstrapServers = retrieveBootstrapServers(kafkaProducer).orElseGet(() -> retrieveDefaultProducerBootstrapServers(kafkaProperties));
         }
 
@@ -110,20 +118,30 @@ public class ProducerProxyBeanFactory {
             return nonNull(kafkaProducer) && hasText(kafkaProducer.topic());
         }
 
-        private Optional<Class> retrieveKeySerializer(KafkaProducer kafkaProducer) {
+        private Optional<Class> retrieveKeySerializerClass(KafkaProducer kafkaProducer) {
             if (keySerializerDefined(kafkaProducer)) {
                 return Optional.of(kafkaProducer.keySerializer());
             }
             return Optional.empty();
         }
 
-        private boolean keySerializerDefined(final KafkaProducer kafkaProducer) {
-            return nonNull(kafkaProducer) && !kafkaProducer.keySerializer().equals(KafkaProducer.DefaultSerializer.class);
-        }
-
-        private Optional<Class> retrieveValueSerializer(KafkaProducer kafkaProducer) {
+        private Optional<Class> retrieveValueSerializerClass(KafkaProducer kafkaProducer) {
             if (isValueSerializerDefined(kafkaProducer)) {
                 return Optional.of(kafkaProducer.valueSerializer());
+            }
+            return Optional.empty();
+        }
+
+        private Optional<Serializer<V>> retrieveValueSerializerBean(KafkaProducer kafkaProducer) {
+            if (isValueSerializerBeanDefined(kafkaProducer)) {
+                return Optional.of(kafkaProducer.valueSerializerBean()).map(beanName -> (Serializer<V>) applicationContext.getBean(beanName));
+            }
+            return Optional.empty();
+        }
+
+        private Optional<Serializer<K>> retrieveKeySerializerBean(KafkaProducer kafkaProducer) {
+            if (isKeySerializerBeanDefined(kafkaProducer)) {
+                return Optional.of(kafkaProducer.keySerializerBean()).map(beanName -> (Serializer<K>) applicationContext.getBean(beanName));
             }
             return Optional.empty();
         }
@@ -159,6 +177,18 @@ public class ProducerProxyBeanFactory {
 
         private boolean isValueSerializerDefined(final KafkaProducer kafkaProducer) {
             return nonNull(kafkaProducer) && !kafkaProducer.valueSerializer().equals(KafkaProducer.DefaultSerializer.class);
+        }
+
+        private boolean isValueSerializerBeanDefined(final KafkaProducer kafkaProducer) {
+            return nonNull(kafkaProducer) && !kafkaProducer.valueSerializerBean().equals("");
+        }
+
+        private boolean keySerializerDefined(final KafkaProducer kafkaProducer) {
+            return nonNull(kafkaProducer) && !kafkaProducer.keySerializer().equals(KafkaProducer.DefaultSerializer.class);
+        }
+
+        private boolean isKeySerializerBeanDefined(final KafkaProducer kafkaProducer) {
+            return nonNull(kafkaProducer) && !kafkaProducer.keySerializerBean().equals("");
         }
     }
 }
