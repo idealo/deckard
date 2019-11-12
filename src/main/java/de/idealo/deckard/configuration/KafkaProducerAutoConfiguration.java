@@ -7,6 +7,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,6 +20,8 @@ public class KafkaProducerAutoConfiguration {
 
     @Autowired(required = false)
     private KafkaProperties kafkaProperties;
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Bean(ProducerProxyBeanFactory.DEFAULT_FACTORY_BEAN_NAME)
     ProducerProxyBeanFactory proxyBeanFactory(ConfigurableBeanFactory configurableBeanFactory) {
@@ -27,6 +30,6 @@ public class KafkaProducerAutoConfiguration {
             return new KafkaProperties();
         });
 
-        return new ProducerProxyBeanFactory(properties, configurableBeanFactory);
+        return new ProducerProxyBeanFactory(properties, configurableBeanFactory, applicationContext);
     }
 }

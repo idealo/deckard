@@ -17,6 +17,10 @@ public @interface KafkaProducer {
 
     Class valueSerializer() default DefaultSerializer.class;
 
+    String keySerializerBean() default "";
+
+    String valueSerializerBean() default "";
+
     class DefaultSerializer {
     }
 }
