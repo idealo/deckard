@@ -1,5 +1,6 @@
 package de.idealo.deckard.proxy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.idealo.deckard.producer.GenericProducer;
 import de.idealo.deckard.stereotype.KafkaProducer;
 import lombok.AllArgsConstructor;
@@ -9,11 +10,8 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.common.serialization.IntegerDeserializer;
-import org.apache.kafka.common.serialization.IntegerSerializer;
-import org.apache.kafka.common.serialization.LongDeserializer;
-import org.apache.kafka.common.serialization.LongSerializer;
-import org.assertj.core.util.Lists;
+import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.serialization.*;
 import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -22,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
@@ -32,6 +31,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Map;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.StreamSupport.stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -50,26 +50,27 @@ public class ProducerDefinitionIT {
     private static final String KAFKA_TEST_TOPIC_LONG = "the.test.topic.long";
     private static final String KAFKA_TEST_TOPIC_JSON = "the.test.topic.json";
     private static final String KAFKA_TEST_TOPIC_FROM_SPEL = "the.test.topic.from.spel";
+    private static final String KAFKA_TEST_TOPIC_BEAN = "the.test.topic.bean";
 
     @ClassRule
     public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC_INTEGER, KAFKA_TEST_TOPIC_LONG, KAFKA_TEST_TOPIC_JSON, KAFKA_TEST_TOPIC_FROM_SPEL);
 
     @Autowired
     private ProducerDefinitionIT.TestConfig.LongProducer longProducer;
-
     @Autowired
     private ProducerDefinitionIT.TestConfig.JsonProducer jsonProducer;
-
     @Autowired
     private ProducerDefinitionIT.TestConfig.IntegerProducer intProducer;
-
     @Autowired
     private ProducerDefinitionIT.TestConfig.SpelProducer spelProducer;
+    @Autowired
+    private ProducerDefinitionIT.TestConfig.ValueBeanProducer beanProducer;
 
     private Consumer<Long, Integer> intConsumer;
     private Consumer<Integer, Long> longConsumer;
-    private Consumer<TestDto, TestDto> jsonConsumer;
-    private Consumer<TestDto, TestDto> spelConsumer;
+    private Consumer<TestPayload, TestPayload> jsonConsumer;
+    private Consumer<TestPayload, TestPayload> spelConsumer;
+    private Consumer<TestKey, TestPayload> beanConsumer;
 
     @Before
     public void setUp() {
@@ -77,10 +78,11 @@ public class ProducerDefinitionIT {
         longConsumer = createConsumer(IntegerDeserializer.class, LongDeserializer.class, KAFKA_TEST_TOPIC_LONG, "longConsumers");
         jsonConsumer = createConsumer(JsonDeserializer.class, JsonDeserializer.class, KAFKA_TEST_TOPIC_JSON, "jsonConsumer");
         spelConsumer = createConsumer(JsonDeserializer.class, JsonDeserializer.class, KAFKA_TEST_TOPIC_FROM_SPEL, "spelConsumer");
+        beanConsumer = createConsumer(new TypeAgnosticDeserializer<>(TestKey.class), new TypeAgnosticDeserializer<>(TestPayload.class), KAFKA_TEST_TOPIC_BEAN, "beanConsumer");
     }
 
     @Test
-    public void shouldConfigureAnnotatedProducerWithSerializersViaDefaultFromProperties() throws Exception {
+    public void shouldConfigureAnnotatedProducerWithSerializersViaDefaultFromProperties() {
         intProducer.send(23L, 42);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
@@ -94,7 +96,7 @@ public class ProducerDefinitionIT {
     }
 
     @Test
-    public void shouldConfigureAnnotatedProducerWithSerializersWithDefinedLongSerializer() throws Exception {
+    public void shouldConfigureAnnotatedProducerWithSerializersWithDefinedLongSerializer() {
         longProducer.send(24, 12L);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
@@ -108,12 +110,12 @@ public class ProducerDefinitionIT {
     }
 
     @Test
-    public void shouldConfigureAnnotatedProducerWithSerializerWithDefinedJsonSerializer() throws Exception {
-        TestDto dto = new TestDto("Hello.");
+    public void shouldConfigureAnnotatedProducerWithSerializerWithDefinedJsonSerializer() {
+        TestPayload dto = new TestPayload("Hello.");
         jsonProducer.send(dto);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<TestDto, TestDto> records = jsonConsumer.poll(100);
+            ConsumerRecords<TestPayload, TestPayload> records = jsonConsumer.poll(100);
             assertThat(records).hasSize(1);
             stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(dto));
         });
@@ -121,18 +123,35 @@ public class ProducerDefinitionIT {
 
     @Test
     public void shouldConfigureAnnotatedProducerWithTopicFromSpelExpression() {
-        TestDto dto = new TestDto("Hello.");
+        TestPayload dto = new TestPayload("Hello.");
         spelProducer.send(dto);
 
         await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<TestDto, TestDto> records = spelConsumer.poll(100);
+            ConsumerRecords<TestPayload, TestPayload> records = spelConsumer.poll(100);
             assertThat(records).hasSize(1);
             stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(dto));
         });
     }
 
+    @Test
+    public void shouldConfigureAnnotatedProducerWithSerializersByBeanName() {
+        TestKey key = new TestKey("Hello.Key");
+        TestPayload payload = new TestPayload("Hello.Value");
+        beanProducer.send(key, payload);
+
+        await().atMost(Duration.TEN_SECONDS).untilAsserted(() -> {
+            ConsumerRecords<TestKey, TestPayload> records = beanConsumer.poll(100);
+            assertThat(records).hasSize(1);
+            stream(records.spliterator(), false).forEach(record -> {
+                assertThat(record.key()).isEqualTo(key);
+                assertThat(record.value()).isEqualTo(payload);
+            });
+        });
+    }
+
     @TestConfiguration
     public static class TestConfig {
+
         @KafkaProducer(topic = KAFKA_TEST_TOPIC_LONG, keySerializer = IntegerSerializer.class, valueSerializer = LongSerializer.class)
         interface LongProducer extends GenericProducer<Integer, Long> {
         }
@@ -142,11 +161,25 @@ public class ProducerDefinitionIT {
         }
 
         @KafkaProducer(topic = KAFKA_TEST_TOPIC_JSON, keySerializer = JsonSerializer.class, valueSerializer = JsonSerializer.class)
-        interface JsonProducer extends GenericProducer<TestDto, TestDto> {
+        interface JsonProducer extends GenericProducer<TestPayload, TestPayload> {
         }
 
         @KafkaProducer(topic = "${spel.test.topic}", keySerializer = JsonSerializer.class, valueSerializer = JsonSerializer.class)
-        interface SpelProducer extends GenericProducer<TestDto, TestDto> {
+        interface SpelProducer extends GenericProducer<TestPayload, TestPayload> {
+        }
+
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC_BEAN, keySerializerBean = "testDtoKeySerializer", valueSerializerBean = "testDtoValueSerializer")
+        interface ValueBeanProducer extends GenericProducer<TestKey, TestPayload> {
+        }
+
+        @Bean
+        public Serializer<TestKey> testDtoValueSerializer() {
+            return new JsonSerializer<>();
+        }
+
+        @Bean
+        public Serializer<TestPayload> testDtoKeySerializer() {
+            return new JsonSerializer<>();
         }
     }
 
@@ -160,14 +193,51 @@ public class ProducerDefinitionIT {
         ConsumerFactory<K, V> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
 
         Consumer<K, V> consumer = consumerFactory.createConsumer();
-        consumer.subscribe(Lists.newArrayList(topic));
+        consumer.subscribe(singletonList(topic));
+        return consumer;
+    }
+
+    private <K, V> Consumer<K, V> createConsumer(Deserializer<K> keyDeserializer, Deserializer<V> valueDeserializer, String topic, String group) {
+        Map<String, Object> consumerProps = consumerProps(group, "true", kafkaEmbedded);
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+
+        ConsumerFactory<K, V> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps, keyDeserializer, valueDeserializer);
+
+        Consumer<K, V> consumer = consumerFactory.createConsumer();
+        consumer.subscribe(singletonList(topic));
         return consumer;
     }
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    static class TestDto {
+    static class TestKey {
+        private String value;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    static class TestPayload {
         private String message;
     }
+
+    static class TypeAgnosticDeserializer<T> extends JsonDeserializer<T> {
+
+        private static final String TYPE_ID_HEADER = "__TypeId__";
+        private static final String KEY_TYPE_ID_HEADER = "__Key_TypeId__";
+
+        TypeAgnosticDeserializer(Class<T> clazz) {
+            super(clazz, new ObjectMapper());
+        }
+
+        @Override
+        public T deserialize(String topic, Headers headers, byte[] data) {
+            headers.remove(TYPE_ID_HEADER);
+            headers.remove(KEY_TYPE_ID_HEADER);
+            return super.deserialize(topic, headers, data);
+        }
+    }
+
 }
