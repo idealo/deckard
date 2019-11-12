@@ -35,11 +35,28 @@ bootstrapping mechanism.
 ### Notes:
 #### Serializers
 You may set a default serializer for your keys and values as usual via the Spring Kafka properties. 
-However, if you want to use different serializers on individual producers, you can also specify them in the producer definition:
+However, if you want to use different serializers on individual producers, you may specify them as classes or bean 
+references in the producer definition:
 
 ````java
 @KafkaProducer(topic = "my.topic", keySerializer = LongSerializer.class, valueSerializer = JsonSerializer.class)
 public interface MyProducer extends GenericProducer<String, MyDto> {}
+````
+````java
+@KafkaProducer(topic = "my.topic", keySerializerBean = "myKeySerializer", valueSerializerBean = "myValueSerializer")
+public interface MyProducer extends GenericProducer<MyKey, MyValue> {}
+````
+
+Note that bean references have higher precedence than classes. You are also able to mix definition or omit certain ones 
+if you want to partly use the Spring Kafka properties. E.g.:
+
+````java
+@KafkaProducer(topic = "my.topic", valueSerializer = JsonSerializer.class)
+public interface MyProducer extends GenericProducer<String, MyDto> {}
+````
+````java
+@KafkaProducer(topic = "my.topic", keySerializer = LongSerializer.class, valueSerializerBean = "myValueSerializer")
+public interface MyProducer extends GenericProducer<MyKey, MyValue> {}
 ````
 
 #### Bootstrap Servers
