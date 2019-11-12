@@ -81,15 +81,19 @@ public class ProducerProxyBeanFactory {
         ProducerDefinition(final Class<T> producerClass) throws IllegalAccessException, InstantiationException {
             final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
             this.topic = retrieveTopic(producerClass, kafkaProducer);
-            this.keySerializer = retrieveKeySerializerBean(kafkaProducer)
-                    .orElse((Serializer<K>) retrieveKeySerializerClass(kafkaProducer)
-                            .orElse(kafkaProperties.getProducer().getKeySerializer()).newInstance()
-                    );
-            this.valueSerializer = retrieveValueSerializerBean(kafkaProducer)
-                    .orElse((Serializer<V>) retrieveValueSerializerClass(kafkaProducer)
-                            .orElse(kafkaProperties.getProducer().getValueSerializer()).newInstance()
-                    );
+            this.keySerializer = retrieveKeySerializerBean(kafkaProducer).orElse(createKeySerializerBean(kafkaProducer));
+            this.valueSerializer = retrieveValueSerializerBean(kafkaProducer).orElse(createValueSerializerBean(kafkaProducer));
             this.bootstrapServers = retrieveBootstrapServers(kafkaProducer).orElseGet(() -> retrieveDefaultProducerBootstrapServers(kafkaProperties));
+        }
+
+        private Serializer<V> createValueSerializerBean(KafkaProducer kafkaProducer) throws InstantiationException, IllegalAccessException {
+            return (Serializer<V>) retrieveValueSerializerClass(kafkaProducer)
+                    .orElse(kafkaProperties.getProducer().getValueSerializer()).newInstance();
+        }
+
+        private Serializer<K> createKeySerializerBean(KafkaProducer kafkaProducer) throws InstantiationException, IllegalAccessException {
+            return (Serializer<K>) retrieveKeySerializerClass(kafkaProducer)
+                    .orElse(kafkaProperties.getProducer().getKeySerializer()).newInstance();
         }
 
         private String retrieveTopic(Class<T> producerClass, final KafkaProducer kafkaProducer) {
