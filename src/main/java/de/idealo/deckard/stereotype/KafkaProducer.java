@@ -21,6 +21,10 @@ public @interface KafkaProducer {
 
     String valueSerializerBean() default "";
 
+    String encryptPassword() default "";
+
+    String encryptSalt() default "";
+
     class DefaultSerializer {
     }
 }
