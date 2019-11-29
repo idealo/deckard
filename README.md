@@ -73,6 +73,24 @@ public interface MyProducer extends GenericProducer<String, MyDto> {}
 public interface MyProducer extends GenericProducer<String, MyDto> {}
 ````
 
+#### Payload Encryption
+In case you want to encrypt your payload, you could either use a custom serializer as described above or use Deckard's 
+built-in AES encryption support:
+ 
+````java
+@KafkaProducer(topic = "my.topic", encryptPassword = "mypass", encryptSalt = "12ab")
+        interface EncryptingProducer extends GenericProducer<Long, String> {}
+````
+````java
+@KafkaProducer(topic = "my.topic", encryptPassword = "${pass.from.property}", encryptSalt = "${salt.from.property}")
+        interface EncryptingSpelProducer extends GenericProducer<Long, String> {}
+````
+
+Encryption works with any serializer as Deckard just wraps the provided pay load serializer with encryption functionality.
+
+In order to ease usage on the consumer's end as well, Deckard provides a matching 
+`de.idealo.deckard.encryption.DecryptingDeserializer` as well.
+
 #### Property Placeholder Support
 The parameters `topic` and `bootstrapServers` are also able to resolve property placeholders:
 ````java
@@ -110,5 +128,4 @@ Team Postman will continue to develop this, since we're already using it in prod
 __However, you are welcome to join in with your ideas and create pull requests!__
 
 #### Planned Features:
-- integration of Kafka Encryption as provided by team SSO
 - IDE integration
