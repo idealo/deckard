@@ -112,11 +112,11 @@ public class EncryptionIT {
     @TestConfiguration
     public static class TestConfig {
 
-        @KafkaProducer(topic = KAFKA_TEST_TOPIC, encryptPassword = "mypass", encryptSalt = "12ab", bootstrapServers = "localhost:14242")
+        @KafkaProducer(topic = KAFKA_TEST_TOPIC, encryptionPassword = "mypass", encryptionSalt = "12ab", bootstrapServers = "localhost:14242")
         interface EncryptingProducer extends GenericProducer<Long, String> {
         }
 
-        @KafkaProducer(topic = KAFKA_TEST_SPEL_TOPIC, encryptPassword = "${deckard.my-pass}", encryptSalt = "${deckard.my-salt}", bootstrapServers = "localhost:14242")
+        @KafkaProducer(topic = KAFKA_TEST_SPEL_TOPIC, encryptionPassword = "${deckard.my-pass}", encryptionSalt = "${deckard.my-salt}", bootstrapServers = "localhost:14242")
         interface EncryptingSpelProducer extends GenericProducer<Long, String> {
         }
     }
