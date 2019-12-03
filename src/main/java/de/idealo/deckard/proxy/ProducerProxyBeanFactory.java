@@ -104,7 +104,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private boolean isValidEncryptionSetup(String encryptPassword, String encryptSalt) {
-            return Objects.nonNull(encryptPassword) && Objects.nonNull(encryptSalt) && !encryptPassword.equals("") && !encryptSalt.equals("");
+            return nonNull(encryptPassword) && nonNull(encryptSalt) && !Objects.equals("", encryptPassword) && !Objects.equals("", encryptSalt);
         }
 
         private Serializer<V> createValueSerializerBean(KafkaProducer kafkaProducer) throws InstantiationException, IllegalAccessException {
