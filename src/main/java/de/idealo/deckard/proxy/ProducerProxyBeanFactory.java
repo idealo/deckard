@@ -1,5 +1,6 @@
 package de.idealo.deckard.proxy;
 
+import de.idealo.deckard.encryption.EncryptingSerializer;
 import de.idealo.deckard.producer.GenericProducer;
 import de.idealo.deckard.producer.Producer;
 import de.idealo.deckard.stereotype.KafkaProducer;
@@ -15,6 +16,8 @@ import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Proxy;
 import java.util.List;
@@ -82,8 +85,26 @@ public class ProducerProxyBeanFactory {
             final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
             this.topic = retrieveTopic(producerClass, kafkaProducer);
             this.keySerializer = retrieveKeySerializerBean(kafkaProducer).orElse(createKeySerializerBean(kafkaProducer));
-            this.valueSerializer = retrieveValueSerializerBean(kafkaProducer).orElse(createValueSerializerBean(kafkaProducer));
+            this.valueSerializer = encryptedIfConfigured(kafkaProducer, retrieveValueSerializerBean(kafkaProducer).orElse(createValueSerializerBean(kafkaProducer)));
             this.bootstrapServers = retrieveBootstrapServers(kafkaProducer).orElseGet(() -> retrieveDefaultProducerBootstrapServers(kafkaProperties));
+        }
+
+        private Serializer<V> encryptedIfConfigured(KafkaProducer kafkaProducer, Serializer<V> embeddedSerializer) {
+            if (!kafkaProducer.encryptionPassword().equals("") || !kafkaProducer.encryptionSalt().equals("")) {
+                Assert.isTrue(isValidEncryptionSetup(kafkaProducer.encryptionPassword(), kafkaProducer.encryptionSalt()),
+                        "Both password and salt have to be set.");
+                EmbeddedValueResolver embeddedValueResolver = new EmbeddedValueResolver(configurableBeanFactory);
+                String pass = kafkaProducer.encryptionPassword().startsWith("${") && kafkaProducer.encryptionPassword().endsWith("}") ?
+                        embeddedValueResolver.resolveStringValue(kafkaProducer.encryptionPassword()) : kafkaProducer.encryptionPassword();
+                String salt = kafkaProducer.encryptionSalt().startsWith("${") && kafkaProducer.encryptionSalt().endsWith("}") ?
+                        embeddedValueResolver.resolveStringValue(kafkaProducer.encryptionSalt()) : kafkaProducer.encryptionSalt();
+                return new EncryptingSerializer<>(pass, salt, embeddedSerializer);
+            }
+            return embeddedSerializer;
+        }
+
+        private boolean isValidEncryptionSetup(String password, String salt) {
+            return !StringUtils.isEmpty(password) && !StringUtils.isEmpty(salt);
         }
 
         private Serializer<V> createValueSerializerBean(KafkaProducer kafkaProducer) throws InstantiationException, IllegalAccessException {
