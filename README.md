@@ -78,7 +78,7 @@ In case you want to encrypt your payload, you could either use a custom serializ
 built-in AES encryption support:
  
 ````java
-@KafkaProducer(topic = "my.topic", encryptionPassword = "<my_secret_pass>", encrypiontSalt = "<my_secret_salt>")
+@KafkaProducer(topic = "my.topic", encryptionPassword = "<my_secret_pass>", encryptionSalt = "<my_secret_salt>")
         interface EncryptingProducer extends GenericProducer<Long, String> {}
 ````
 ````java
