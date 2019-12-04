@@ -115,13 +115,16 @@ We will try to add new features in both versions as long as possible.
 
 #### About the project
 
-This project was the result of our _A&L HackDay_ in October 2018 and January 2019. Participants were:
+This project was the result of our _A&L HackDay_ in October 2018 and January 2019.
+ 
+Contributors:
 - Marcus Janke (Postman)
 - Alexander Lüdeke (Postman)
 - Richard Remus (Postman)
 - Gerald Sander (Postman)
 - Nabil Tawfik (SSO)
 - Daniel Hübner (Engineering Coach)
+- Christian Habermehl
 
 Team Postman will continue to develop this, since we're already using it in production. 
 
