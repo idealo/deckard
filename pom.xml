@@ -8,8 +8,29 @@
   <version>0.15.0</version>
   <packaging>jar</packaging>
 
-  <name>Deckard - Declarative Kafka Resource Definitions</name>
-  <description>A declarative approach to define Kafka producers.</description>
+  <name>Deckard</name>
+  <url>https://github.com/idealo/deckard</url>
+  <description>A declarative approach to defining Spring Kafka producers.</description>
+
+  <developers>
+    <developer>
+      <id>roechi</id>
+      <name>Richard Remus</name>
+      <email>msg.remus@gmail.com</email>
+      <url>https://github.com/roechi</url>
+      <roles>
+        <role>maintainer</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://opensource.org/licenses/Apache-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
