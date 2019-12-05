@@ -43,8 +43,8 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
 @DirtiesContext
 public class EncryptionIT {
 
-    private static final String KAFKA_TEST_TOPIC = "my.test.topic";
-    private static final String KAFKA_TEST_SPEL_TOPIC = "my.test.spel.topic";
+    private static final String KAFKA_TEST_TOPIC = "my.test.topic.encrypted";
+    private static final String KAFKA_TEST_SPEL_TOPIC = "my.test.spel.topic.encrypted";
 
     @ClassRule
     public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC, KAFKA_TEST_SPEL_TOPIC);

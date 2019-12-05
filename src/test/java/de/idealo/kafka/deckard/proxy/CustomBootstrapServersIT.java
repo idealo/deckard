@@ -39,8 +39,8 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
 @DirtiesContext
 public class CustomBootstrapServersIT {
 
-    private static final String KAFKA_TEST_TOPIC = "my.test.topic";
-    private static final String KAFKA_PROPERTY_TEST_TOPIC = "my.property.test.topic";
+    private static final String KAFKA_TEST_TOPIC = "my.test.topic.custom";
+    private static final String KAFKA_PROPERTY_TEST_TOPIC = "my.property.test.topic.custom";
 
     @ClassRule
     public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC, KAFKA_PROPERTY_TEST_TOPIC);
