@@ -97,11 +97,6 @@ The parameters `topic` and `bootstrapServers` are also able to resolve property 
 @KafkaProducer(topic = "${topic.name.from.property}", bootstrapServers = "${bootstrap-servers.from.property}")
 public interface MyProducer extends GenericProducer<String, String> {}
 ````
-  
-
-#### Samples
-
-You can find a showcase for deckard [in this sample project](https://code.eu.idealo.com/projects/UDS/repos/hack_day_declarative_kafka_producer_showcase/browse).
 
 #### Notes on Versioning and Compatibility
 
@@ -115,20 +110,10 @@ We will try to add new features in both versions as long as possible.
 
 #### About the project
 
-This project was the result of our _A&L HackDay_ in October 2018 and January 2019.
+This project was the result of our _A&L HackDay_ at __idealo__ in October 2018 and January 2019.
  
-Contributors:
-- Marcus Janke (Postman)
-- Alexander Lüdeke (Postman)
-- Richard Remus (Postman)
-- Gerald Sander (Postman)
-- Nabil Tawfik (SSO)
-- Daniel Hübner (Engineering Coach)
-- Christian Habermehl
+__You are very welcome to join in with your ideas and create pull requests!__
 
-Team Postman will continue to develop this, since we're already using it in production. 
-
-__However, you are welcome to join in with your ideas and create pull requests!__
-
-#### Planned Features:
+#### Wanted Features:
 - IDE integration
+- revamped Spring Kafka listeners
