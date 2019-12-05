@@ -89,7 +89,7 @@ built-in AES encryption support:
 Encryption works with any serializer as Deckard just wraps the provided pay load serializer with encryption functionality.
 
 In order to ease usage on the consumer's end as well, Deckard provides a matching 
-`de.idealo.deckard.encryption.DecryptingDeserializer` as well.
+`DecryptingDeserializer` as well.
 
 #### Property Placeholder Support
 The parameters `topic` and `bootstrapServers` are also able to resolve property placeholders:
