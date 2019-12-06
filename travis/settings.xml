@@ -1,4 +1,7 @@
-<settings>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
     <servers>
         <server>
             <!-- Maven Central Deployment -->
@@ -7,7 +10,6 @@
             <password>${env.SONATYPE_PASSWORD}</password>
         </server>
     </servers>
-
     <profiles>
         <profile>
             <id>ossrh</id>
@@ -15,7 +17,8 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <gpg.executable>${env.GPG_EXECUTABLE}</gpg.executable>
+                <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
+                <gpg.executable>gpg</gpg.executable>
                 <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
             </properties>
         </profile>
