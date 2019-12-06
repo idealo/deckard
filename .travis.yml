@@ -8,10 +8,10 @@ script: mvn --settings .travis/settings.xml clean  verify
 deploy:
   -
     provider: script
-    script: .travis/deploy.sh
-    skip_cleanup: true
+    script: bash .travis/deploy.sh
+    cleanup: false
     on:
-      repo: idealo/deckard
+      branch: master
       tags: true
       jdk: openjdk8
 
