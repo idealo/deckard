@@ -15,6 +15,7 @@ deploy:
       tags: true
       jdk: openjdk8
 
+
 notifications:
   email:
     - opensource-deckard@idealo.de
