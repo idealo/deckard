@@ -1,6 +1,7 @@
 # Deckard
 ## Declarative Kafka Resource Definitions
 [![Build Status](https://travis-ci.org/idealo/deckard.svg?branch=master)](https://travis-ci.org/idealo/deckard)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.idealo.kafka/deckard/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.idealo.kafka/deckard) 
 
 This library provides an easy solution to write messages to Kafka in a purely declarative and transparent manner.
 It lets you write Kafka messages without having to worry much about complicated configurations. 
