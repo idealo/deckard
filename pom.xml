@@ -5,7 +5,7 @@
 
   <groupId>de.idealo.kafka</groupId>
   <artifactId>deckard</artifactId>
-  <version>0.1.4-SNAPSHOT</version>
+  <version>0.1.6-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Deckard</name>
@@ -16,7 +16,7 @@
     <developer>
       <id>roechi</id>
       <name>Richard Remus</name>
-      <email>msg.remus@gmail.com</email>
+      <email>roechi@posteo.de</email>
       <url>https://github.com/roechi</url>
       <roles>
         <role>maintainer</role>
