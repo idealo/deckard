@@ -120,3 +120,4 @@ __You are very welcome to join in with your ideas and create pull requests!__
 #### Wanted Features:
 - IDE integration
 - revamped Spring Kafka listeners
+- disable sending of type headers via easy-to-use configuration
