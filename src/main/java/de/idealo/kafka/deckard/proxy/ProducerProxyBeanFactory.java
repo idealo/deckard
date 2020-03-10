@@ -23,6 +23,7 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -41,6 +42,7 @@ public class ProducerProxyBeanFactory {
 
     public static final String DEFAULT_FACTORY_BEAN_NAME = "producerProxyBeanFactory";
     private static final Predicate<String> NOT_RESERVED = word -> !word.equalsIgnoreCase("Producer");
+    private static final AtomicInteger producerCount = new AtomicInteger(0);
 
     private final KafkaProperties kafkaProperties;
     private final ConfigurableBeanFactory configurableBeanFactory;
@@ -67,7 +69,7 @@ public class ProducerProxyBeanFactory {
 
         Map<String, Object> producerProps = properties.buildProducerProperties();
         producerProps.put("bootstrap.servers", producerDefinition.getBootstrapServers());
-
+        producerProps.put("client.id", producerProps.get("client.id") + "-deckard-" + producerCount.getAndIncrement() + "-to-" + producerDefinition.topic);
         DefaultKafkaProducerFactory<K, V> producerFactory = new DefaultKafkaProducerFactory<>(producerProps, producerDefinition.getKeySerializer(), producerDefinition.getValueSerializer());
 
         return new KafkaTemplate<>(producerFactory);
