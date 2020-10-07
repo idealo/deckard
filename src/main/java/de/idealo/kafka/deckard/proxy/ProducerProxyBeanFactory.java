@@ -86,16 +86,20 @@ public class ProducerProxyBeanFactory {
         ProducerDefinition(final Class<T> producerClass, KafkaProperties kafkaProperties) throws IllegalAccessException, InstantiationException {
             final KafkaProducer kafkaProducer = producerClass.getAnnotation(KafkaProducer.class);
             this.topic = retrieveTopic(producerClass, kafkaProducer);
+            Map<String, Object> producerProperties = kafkaProperties.buildProducerProperties();
 
-            Serializer<K> keySerializer = retrieveKeySerializerBean(kafkaProducer).orElse(createKeySerializerBean(kafkaProducer));
-            keySerializer.configure(kafkaProperties.buildProducerProperties(), true);
+            Serializer<K> keySerializer = retrieveKeySerializerBean(kafkaProducer)
+                    .orElse(createKeySerializerBean(kafkaProducer));
+            keySerializer.configure(producerProperties, true);
 
-            Serializer<V> valueSerializer = encryptedIfConfigured(kafkaProducer, retrieveValueSerializerBean(kafkaProducer).orElse(createValueSerializerBean(kafkaProducer)));
-            valueSerializer.configure(kafkaProperties.buildProducerProperties(), false);
+            Serializer<V> valueSerializer = encryptedIfConfigured(kafkaProducer, retrieveValueSerializerBean(kafkaProducer)
+                    .orElse(createValueSerializerBean(kafkaProducer)));
+            valueSerializer.configure(producerProperties, false);
 
             this.keySerializer = keySerializer;
             this.valueSerializer = valueSerializer;
-            this.bootstrapServers = retrieveBootstrapServers(kafkaProducer).orElseGet(() -> retrieveDefaultProducerBootstrapServers(kafkaProperties));
+            this.bootstrapServers = retrieveBootstrapServers(kafkaProducer)
+                    .orElseGet(() -> retrieveDefaultProducerBootstrapServers(kafkaProperties));
         }
 
         private Serializer<V> encryptedIfConfigured(KafkaProducer kafkaProducer, Serializer<V> embeddedSerializer) {
