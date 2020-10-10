@@ -60,7 +60,7 @@ public class ProducerProxyBeanFactory {
         return (T) Proxy.newProxyInstance(classLoader, new Class[]{producerClass}, handler);
     }
 
-    private <K, V, T extends GenericProducer<K, V>> KafkaTemplate<K, V> createTemplate(@Autowired(required = false) KafkaProperties kafkaProperties, ProducerDefinition<K, V, T> producerDefinition) {
+    private <K, V, T extends GenericProducer<K, V>> KafkaTemplate<K, V> createTemplate(KafkaProperties kafkaProperties, ProducerDefinition<K, V, T> producerDefinition) {
         KafkaProperties properties = Optional.ofNullable(kafkaProperties).orElseGet(() -> {
             log.warn("You didn't specify any Kafka properties in your configuration. Either this is a test scenario," +
                     "or this was not your intention.");
