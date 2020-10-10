@@ -9,7 +9,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serializer;
 import org.springframework.beans.factory.BeanExpressionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.config.EmbeddedValueResolver;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
