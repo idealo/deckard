@@ -69,6 +69,19 @@
         <maven-failsafe.version>2.22.0</maven-failsafe.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>release-to-maven-central</id>
+            <distributionManagement>
+                <repository>
+                    <id>ossrh</id>
+                    <name>Maven Central</name>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
     <repositories>
         <repository>
             <id>confluent</id>

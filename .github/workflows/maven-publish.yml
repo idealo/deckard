@@ -24,7 +24,21 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
-    - name: Publish to GitHub Packages Apache Maven
+    - name: Publish to GitHub Packages
       run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Set up Java for publishing to Maven Central Repository
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+        server-id: ossrh
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+
+    - name: Publish to Maven Central
+      run: mvn deploy -P release-to-maven-central -s $GITHUB_WORKSPACE/settings.xml
+      env:
+        MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
