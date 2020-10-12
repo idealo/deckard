@@ -5,7 +5,7 @@
 
     <groupId>de.idealo.kafka</groupId>
     <artifactId>deckard</artifactId>
-    <version>1.0.2-RELEASE</version>
+    <version>1.0.3-PRE-RELEASE</version>
     <packaging>jar</packaging>
 
     <name>Deckard</name>
