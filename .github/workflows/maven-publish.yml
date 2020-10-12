@@ -43,8 +43,7 @@ jobs:
         server-password: MAVEN_PASSWORD
 
     - name: Publish to Maven Central
-      run: mvn deploy -P release-to-maven-central -s $GITHUB_WORKSPACE/settings.xml --no-transfer-progress \
-        --batch-mode -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -DskipTests
+      run: mvn deploy -P release-to-maven-central -s $GITHUB_WORKSPACE/settings.xml -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -DskipTests
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
