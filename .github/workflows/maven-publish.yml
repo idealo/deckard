@@ -27,6 +27,7 @@ jobs:
         server-id: ossrh
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
+        settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Publish to Maven Central
       run: mvn deploy -P release-to-maven-central -s $GITHUB_WORKSPACE/settings.xml -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -DskipTests
