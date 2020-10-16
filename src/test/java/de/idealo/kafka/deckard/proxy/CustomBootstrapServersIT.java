@@ -35,7 +35,7 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
         "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.LongSerializer",
         "spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.IntegerSerializer",
         "deckard.bootstrap-servers=localhost:14242"
-})
+        })
 @DirtiesContext
 public class CustomBootstrapServersIT {
 
