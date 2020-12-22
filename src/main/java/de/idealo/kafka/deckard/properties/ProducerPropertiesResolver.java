@@ -1,4 +1,4 @@
-package de.idealo.kafka.deckard.proxy;
+package de.idealo.kafka.deckard.properties;
 
 import de.idealo.kafka.deckard.stereotype.KafkaProducer;
 import lombok.extern.slf4j.Slf4j;
@@ -23,20 +23,17 @@ public class ProducerPropertiesResolver {
 
     public static final String DEFAULT_BEAN_NAME = "producerPropertiesResolver";
 
-    private final KafkaProperties globalKafkaProperties;
     private final ConfigurableBeanFactory configurableBeanFactory;
+    private final GlobalKafkaPropertiesSupplier globalKafkaPropertiesSupplier;
     private final AtomicInteger producerCount = new AtomicInteger(0);
 
-    public ProducerPropertiesResolver(KafkaProperties globalKafkaProperties, ConfigurableBeanFactory configurableBeanFactory) {
+    public ProducerPropertiesResolver(ConfigurableBeanFactory configurableBeanFactory, GlobalKafkaPropertiesSupplier globalKafkaPropertiesSupplier) {
         this.configurableBeanFactory = configurableBeanFactory;
-        this.globalKafkaProperties = Optional.ofNullable(globalKafkaProperties).orElseGet(() -> {
-            log.warn("You didn't specify any Kafka properties in your configuration. Either this is a test scenario, or this was not your intention.");
-            return new KafkaProperties();
-        });
+        this.globalKafkaPropertiesSupplier = globalKafkaPropertiesSupplier;
     }
 
     public Map<String, Object> buildProducerProperties(KafkaProducer kafkaProducer) {
-        final Map<String, Object> producerProperties = globalKafkaProperties.buildProducerProperties();
+        final Map<String, Object> producerProperties = globalKafkaPropertiesSupplier.get().buildProducerProperties();
 
         producerProperties.put("bootstrap.servers",  retrieveBootstrapServers(kafkaProducer));
         producerProperties.put("client.id", retrieveClientId(kafkaProducer, producerProperties));
@@ -50,7 +47,7 @@ public class ProducerPropertiesResolver {
 
     private List<String> retrieveBootstrapServers(KafkaProducer kafkaProducer) {
         return retrieveAnnotationBootstrapServers(kafkaProducer)
-                .orElseGet(() -> retrieveDefaultProducerBootstrapServers(globalKafkaProperties));
+                .orElseGet(() -> retrieveDefaultProducerBootstrapServers(globalKafkaPropertiesSupplier.get()));
     }
     private Optional<List<String>> retrieveAnnotationBootstrapServers(KafkaProducer kafkaProducer) {
         if (isBootstrapServersDefined(kafkaProducer)) {

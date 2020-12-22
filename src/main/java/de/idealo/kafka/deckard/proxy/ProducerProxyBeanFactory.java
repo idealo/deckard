@@ -3,8 +3,8 @@ package de.idealo.kafka.deckard.proxy;
 import de.idealo.kafka.deckard.encryption.EncryptingSerializer;
 import de.idealo.kafka.deckard.producer.GenericProducer;
 import de.idealo.kafka.deckard.producer.Producer;
+import de.idealo.kafka.deckard.properties.ProducerPropertiesResolver;
 import de.idealo.kafka.deckard.stereotype.KafkaProducer;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serializer;
@@ -28,15 +28,25 @@ import static java.util.stream.Collectors.joining;
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
-@RequiredArgsConstructor
 public class ProducerProxyBeanFactory {
 
     public static final String DEFAULT_FACTORY_BEAN_NAME = "producerProxyBeanFactory";
+
     private static final Predicate<String> NOT_RESERVED = word -> !word.equalsIgnoreCase("Producer");
 
     private final ProducerPropertiesResolver producerPropertiesResolver;
     private final ConfigurableBeanFactory configurableBeanFactory;
     private final ApplicationContext applicationContext;
+
+    public ProducerProxyBeanFactory(
+            ProducerPropertiesResolver producerPropertiesResolver,
+            ConfigurableBeanFactory configurableBeanFactory,
+            ApplicationContext applicationContext
+    ) {
+        this.producerPropertiesResolver = producerPropertiesResolver;
+        this.configurableBeanFactory = configurableBeanFactory;
+        this.applicationContext = applicationContext;
+    }
 
     @SuppressWarnings("unchecked")
     public <K, V, T extends GenericProducer<K, V>> T createBean(ClassLoader classLoader, Class<T> producerClass) throws InstantiationException, IllegalAccessException {

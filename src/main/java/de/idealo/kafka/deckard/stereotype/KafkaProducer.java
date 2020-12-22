@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface KafkaProducer {
 
+    String id() default  "";
+
     String topic();
 
     String[] bootstrapServers() default {};
