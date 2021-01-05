@@ -2,13 +2,7 @@ package de.idealo.kafka.deckard.properties;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Objects;
 
 @Slf4j
 @Data

@@ -101,6 +101,48 @@ The parameters `topic` and `bootstrapServers` are also able to resolve property 
 public interface MyProducer extends GenericProducer<String, String> {}
 ````
 
+#### Granular Producer Property Control
+In case you need more granular control over your producer's properties without sacrificing the beauty of less boilerplate configuration, you now can configure any producer using all of Spring Kafka's properties.
+
+You need to set up two things in order to get the ball rolling. First, give your producer a specific ID:
+````java
+@KafkaProducer(id = "orders", topic = "some-topic")
+public interface MyProducer extends GenericProducer<String, String> {}
+````
+
+Second, configure any property you already know from Spring Kafka's `KafkaProperties` in the application.yaml (or anywhere you like):
+````yaml
+deckard:
+  properties:
+    orders:
+      producer:
+        bootstrapServers: localhost:12345
+      ssl:
+        keyStorePassword: some-password
+      ...
+````
+
+That's it.
+
+So, what's happening here. `KafkaProducer` properties are resolved (and possibly overridden) in the following order:
+
+* Spring Kafka managed `KafkaProperties`
+* Deckard managed context properties by ID as described above
+* Properties defined in the `KafkaProducer` annotation directly
+* (A generated client-id per producer)
+
+The last step is required in order to ensure unique client IDs per globally. I.e. any previously defined client-id will be ignored. However, you can disable this behavior and define your own client ID:
+ ````yaml
+deckard:
+  properties:
+    orders:
+      client-id: my-order-client
+  features:
+    auto-generate-client-id:
+      enabled: false
+````
+
+
 #### Notes on Versioning and Compatibility
 
 Deckard was originally built on Spring Kafka 2.0.x which is only compatible with Spring Boot 2.0.x.

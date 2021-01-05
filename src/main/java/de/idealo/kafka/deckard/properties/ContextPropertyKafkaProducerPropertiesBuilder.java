@@ -4,9 +4,9 @@ import de.idealo.kafka.deckard.stereotype.KafkaProducer;
 
 import java.util.Map;
 
-public interface KafkaProducerPropertiesBuilder {
+public interface ContextPropertyKafkaProducerPropertiesBuilder {
 
-    String DEFAULT_BEAN_NAME = "kafkaProducerPropertiesBuilder";
+    String DEFAULT_BEAN_NAME = "contextPropertyKafkaProducerPropertiesBuilder";
 
     Map<String, Object> buildProducerProperties(KafkaProducer kafkaProducer);
 }

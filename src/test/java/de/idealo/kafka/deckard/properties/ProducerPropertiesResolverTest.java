@@ -1,12 +1,12 @@
-package de.idealo.kafka.deckard.proxy;
+package de.idealo.kafka.deckard.properties;
 
 import de.idealo.kafka.deckard.producer.GenericProducer;
-import de.idealo.kafka.deckard.properties.GlobalKafkaPropertiesSupplier;
-import de.idealo.kafka.deckard.properties.ProducerPropertiesResolver;
+import de.idealo.kafka.deckard.properties.*;
 import de.idealo.kafka.deckard.stereotype.KafkaProducer;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.beans.factory.config.EmbeddedValueResolver;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 
@@ -14,28 +14,35 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProducerPropertiesResolverTest {
 
     private ProducerPropertiesResolver producerPropertiesResolver;
-    private ConfigurableBeanFactory factory;
+    private ConfigurableBeanFactory factory = new DefaultListableBeanFactory();
+    private AnnotationKafkaProducerPropertiesBuilder annotationKafkaProducerPropertiesBuilder;
+    private ClientIdBuilder clientIdBuilder;
+
+    private final ContextPropertyKafkaProducerPropertiesBuilder noOpKafkaProducerPropertiesBuilder = (kafkaProducer) -> emptyMap();
 
     @Before
     public void setUp() {
         factory = new DefaultListableBeanFactory();
+        annotationKafkaProducerPropertiesBuilder = new DefaultAnnotationKafkaProducerPropertiesBuilder(new EmbeddedValueResolver(factory));
+        clientIdBuilder = new DefaultClientIdBuilder();
     }
 
     @Test
-    public void shouldOverwriteClientId() {
+    public void shouldOverwriteClientIdWhenDefaultCliendIdBuilderIsUsed() {
         final KafkaProducer kafkaProducer = ProducerPropertiesResolverTestProducer.class.getAnnotation(KafkaProducer.class);
-        final GlobalKafkaPropertiesSupplier globalKafkaPropertiesSupplier = () -> {
+        final GlobalKafkaProducerPropertiesBuilder globalKafkaPropertiesSupplier = () -> {
             final KafkaProperties kafkaProperties = new KafkaProperties();
             kafkaProperties.setClientId("myclient");
-            return kafkaProperties;
+            return kafkaProperties.buildProducerProperties();
         };
-        producerPropertiesResolver = new ProducerPropertiesResolver(factory, globalKafkaPropertiesSupplier);
+        producerPropertiesResolver = new ProducerPropertiesResolver(globalKafkaPropertiesSupplier, noOpKafkaProducerPropertiesBuilder, annotationKafkaProducerPropertiesBuilder, clientIdBuilder);
 
         final Map<String, Object> producerProperties = producerPropertiesResolver.buildProducerProperties(kafkaProducer);
 
@@ -45,12 +52,12 @@ public class ProducerPropertiesResolverTest {
     @Test
     public void shouldIncrementClientId() {
         final KafkaProducer kafkaProducer = ProducerPropertiesResolverTestProducer.class.getAnnotation(KafkaProducer.class);
-        final GlobalKafkaPropertiesSupplier globalKafkaPropertiesSupplier = () -> {
+        final GlobalKafkaProducerPropertiesBuilder globalKafkaPropertiesSupplier = () -> {
             final KafkaProperties kafkaProperties = new KafkaProperties();
             kafkaProperties.setClientId("myclient");
-            return kafkaProperties;
+            return kafkaProperties.buildProducerProperties();
         };
-        producerPropertiesResolver = new ProducerPropertiesResolver(factory, globalKafkaPropertiesSupplier);
+        producerPropertiesResolver = new ProducerPropertiesResolver(globalKafkaPropertiesSupplier, noOpKafkaProducerPropertiesBuilder, annotationKafkaProducerPropertiesBuilder, clientIdBuilder);
 
         producerPropertiesResolver.buildProducerProperties(kafkaProducer);
         final Map<String, Object> producerProperties = producerPropertiesResolver.buildProducerProperties(kafkaProducer);
@@ -62,14 +69,14 @@ public class ProducerPropertiesResolverTest {
     public void shouldPreferProducerBootstrapServersOverGlobalBootstrapServers() {
         final KafkaProducer kafkaProducer = ProducerPropertiesResolverTestProducer.class.getAnnotation(KafkaProducer.class);
         final List<String> producerBootstrapServers = singletonList("localhost:9093");
-        final GlobalKafkaPropertiesSupplier globalKafkaPropertiesSupplier = () -> {
+        final GlobalKafkaProducerPropertiesBuilder globalKafkaPropertiesSupplier = () -> {
             final KafkaProperties kafkaProperties = new KafkaProperties();
             final List<String> globalBootstrapServers = singletonList("localhost:9092");
             kafkaProperties.setBootstrapServers(globalBootstrapServers);
             kafkaProperties.getProducer().setBootstrapServers(producerBootstrapServers);
-            return kafkaProperties;
+            return kafkaProperties.buildProducerProperties();
         };
-        producerPropertiesResolver = new ProducerPropertiesResolver(factory, globalKafkaPropertiesSupplier);
+        producerPropertiesResolver = new ProducerPropertiesResolver(globalKafkaPropertiesSupplier, noOpKafkaProducerPropertiesBuilder, annotationKafkaProducerPropertiesBuilder, clientIdBuilder);
 
         final Map<String, Object> producerProperties = producerPropertiesResolver.buildProducerProperties(kafkaProducer);
 
@@ -79,15 +86,15 @@ public class ProducerPropertiesResolverTest {
     @Test
     public void shouldPreferAnnotationBootstrapServersOverProducerBootstrapServers() {
         final KafkaProducer kafkaProducer = CustomBootstrapServerProducerPropertiesResolverTestProducer.class.getAnnotation(KafkaProducer.class);
-        final GlobalKafkaPropertiesSupplier globalKafkaPropertiesSupplier = () -> {
+        final GlobalKafkaProducerPropertiesBuilder globalKafkaPropertiesSupplier = () -> {
             final KafkaProperties kafkaProperties = new KafkaProperties();
             final List<String> globalBootstrapServers = singletonList("localhost:9092");
             final List<String> producerBootstrapServers = singletonList("localhost:9093");
             kafkaProperties.setBootstrapServers(globalBootstrapServers);
             kafkaProperties.getProducer().setBootstrapServers(producerBootstrapServers);
-            return kafkaProperties;
+            return kafkaProperties.buildProducerProperties();
         };
-        producerPropertiesResolver = new ProducerPropertiesResolver(factory, globalKafkaPropertiesSupplier);
+        producerPropertiesResolver = new ProducerPropertiesResolver(globalKafkaPropertiesSupplier, noOpKafkaProducerPropertiesBuilder, annotationKafkaProducerPropertiesBuilder, clientIdBuilder);
 
         final Map<String, Object> producerProperties = producerPropertiesResolver.buildProducerProperties(kafkaProducer);
 
