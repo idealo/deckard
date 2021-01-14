@@ -1,7 +1,8 @@
 # Deckard
 ## Declarative Kafka Resource Definitions (for Spring)
-![Java CI with Maven](https://github.com/idealo/deckard/workflows/Java%20CI%20with%20Maven/badge.svg)
-![Maven Package](https://github.com/idealo/deckard/workflows/Maven%20Package/badge.svg)
+![Build](https://github.com/idealo/deckard/workflows/Build/badge.svg)
+![Maven Central](https://github.com/idealo/deckard/workflows/Maven%20Central/badge.svg)
+![Github Package](https://github.com/idealo/deckard/workflows/Github%20Package/badge.svg)
 
 
 Deckard is a wrapper library for Spring Kafka. It provides an easy solution to write messages to Kafka in a purely declarative and transparent manner.
