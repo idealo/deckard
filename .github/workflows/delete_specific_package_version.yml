@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Delete package
-      - uses: actions/delete-package-versions@v1
-        with:
-          package-version-ids: '1.0.3-RELEASE'
+    - name: Delete package
+      uses: actions/delete-package-versions@v1
+      with:
+        package-version-ids: '1.0.3-RELEASE'
