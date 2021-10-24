@@ -1,24 +1,23 @@
 package de.idealo.kafka.deckard.util;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {
         "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.kafka.producer.key-serializer: org.apache.kafka.common.serialization.LongSerializer",
         "spring.kafka.producer.value-serializer: org.apache.kafka.common.serialization.IntegerSerializer"
 })
 @DirtiesContext
-public class CaseUtilTest {
+class CaseUtilTest {
 
     @Test
-    public void shouldSplitCamelCase() {
+    void shouldSplitCamelCase() {
         Assertions.assertThat(CaseUtil.splitCamelCase("test")).containsOnly("test");
         Assertions.assertThat(CaseUtil.splitCamelCase("testAnotherCase")).containsSequence("test", "another", "case");
         Assertions.assertThat(CaseUtil.splitCamelCase("testABC")).containsOnly("test", "abc");

@@ -2,10 +2,10 @@ package de.idealo.kafka.deckard.encryption;
 
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.encrypt.Encryptors;
 
 import java.util.HashMap;
@@ -13,8 +13,8 @@ import java.util.Map;
 
 import static org.mockito.Mockito.verify;
 
-@RunWith(MockitoJUnitRunner.class)
-public class EncryptingSerializerTest {
+@ExtendWith(MockitoExtension.class)
+class EncryptingSerializerTest {
 
     private static final String PASS = "urdfitvozbunim";
     private static final String SALT = "1234467890abcdef";
@@ -23,7 +23,7 @@ public class EncryptingSerializerTest {
     private StringSerializer embeddedSerializer = new StringSerializer();
 
     @Test
-    public void shouldConfigureEmbeddedSerializer() {
+    void shouldConfigureEmbeddedSerializer() {
         EncryptingSerializer<String> stringEncryptingSerializer = new EncryptingSerializer<>(PASS, SALT, embeddedSerializer);
         Map<String, String> map = new HashMap<>();
         boolean b = true;
@@ -34,7 +34,7 @@ public class EncryptingSerializerTest {
     }
 
     @Test
-    public void shouldCloseEmbeddedSerializer() {
+    void shouldCloseEmbeddedSerializer() {
         EncryptingSerializer<String> stringEncryptingSerializer = new EncryptingSerializer<>(PASS, SALT, embeddedSerializer);
         stringEncryptingSerializer.close();
 
@@ -42,7 +42,7 @@ public class EncryptingSerializerTest {
     }
 
     @Test
-    public void shouldEncryptOnSerialize() {
+    void shouldEncryptOnSerialize() {
         EncryptingSerializer<String> stringEncryptingSerializer = new EncryptingSerializer<>(PASS, SALT, embeddedSerializer);
         byte[] encryptedData = stringEncryptingSerializer.serialize("my-topic", "my-data");
 

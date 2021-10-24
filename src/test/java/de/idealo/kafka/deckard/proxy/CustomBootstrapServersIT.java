@@ -8,46 +8,51 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.assertj.core.util.Lists;
-import org.awaitility.Duration;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Duration;
 import java.util.Map;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {
         "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.LongSerializer",
         "spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.IntegerSerializer",
         "deckard.bootstrap-servers=localhost:14242"
-        })
+})
 @DirtiesContext
-public class CustomBootstrapServersIT {
+@EmbeddedKafka(
+        partitions = 1,
+        controlledShutdown = true,
+        topics = {"my.test.topic.custom", "my.property.test.topic.custom"},
+        count = 1,
+        ports = 14242
+)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class CustomBootstrapServersIT {
 
     private static final String KAFKA_TEST_TOPIC = "my.test.topic.custom";
     private static final String KAFKA_PROPERTY_TEST_TOPIC = "my.property.test.topic.custom";
 
-    @ClassRule
-    public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC, KAFKA_PROPERTY_TEST_TOPIC);
-
-    static {
-        kafkaEmbedded.setKafkaPorts(14242);
-    }
+    @Autowired
+    private EmbeddedKafkaBroker kafkaEmbedded;
 
     @Autowired
     private TestConfig.CustomProducer customProducer;
@@ -58,37 +63,35 @@ public class CustomBootstrapServersIT {
 
     private Consumer<Long, Integer> customPropertyConsumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         customConsumer = createConsumer(LongDeserializer.class, IntegerDeserializer.class, KAFKA_TEST_TOPIC, "testConsumers");
         customPropertyConsumer = createConsumer(LongDeserializer.class, IntegerDeserializer.class, KAFKA_PROPERTY_TEST_TOPIC, "testPropertyConsumers");
     }
 
     @Test
-    public void shouldUseBootstrapServersFromAnnotation() {
+    @Timeout(5)
+    void shouldUseBootstrapServersFromAnnotation() {
         customProducer.send(23L, 42);
 
-        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<Long, Integer> records = customConsumer.poll(100);
-            assertThat(records).hasSize(1);
-            stream(records.spliterator(), false).forEach(record -> {
-                assertThat(record.key()).isEqualTo(23L);
-                assertThat(record.value()).isEqualTo(42);
-            });
+        ConsumerRecords<Long, Integer> records = customConsumer.poll(100);
+        assertThat(records).hasSize(1);
+        stream(records.spliterator(), false).forEach(record -> {
+            assertThat(record.key()).isEqualTo(23L);
+            assertThat(record.value()).isEqualTo(42);
         });
     }
 
     @Test
-    public void shouldUseBootstrapServersFromResolvedSpelExpression() {
+    @Timeout(5)
+    void shouldUseBootstrapServersFromResolvedSpelExpression() {
         customPropertyProducer.send(23L, 42);
 
-        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<Long, Integer> records = customPropertyConsumer.poll(100);
-            assertThat(records).hasSize(1);
-            stream(records.spliterator(), false).forEach(record -> {
-                assertThat(record.key()).isEqualTo(23L);
-                assertThat(record.value()).isEqualTo(42);
-            });
+        ConsumerRecords<Long, Integer> records = customPropertyConsumer.poll(Duration.ofMillis(1000));
+        assertThat(records).hasSize(1);
+        stream(records.spliterator(), false).forEach(record -> {
+            assertThat(record.key()).isEqualTo(23L);
+            assertThat(record.value()).isEqualTo(42);
         });
     }
 

@@ -1,25 +1,25 @@
 package de.idealo.kafka.deckard.properties;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DefaultContextPropertyKafkaProducerPropertiesBuilderConfigurerTest {
+class DefaultContextPropertyKafkaProducerPropertiesBuilderConfigurerTest {
 
     private DefaultContextPropertyKafkaProducerPropertiesBuilderConfigurer configurer;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         configurer = new DefaultContextPropertyKafkaProducerPropertiesBuilderConfigurer();
     }
 
     @Test
-    public void shouldReturnNoPropertiesfromBuilderWhenNoDeckardKafkaPropertiesAvailable() {
+    void shouldReturnNoPropertiesfromBuilderWhenNoDeckardKafkaPropertiesAvailable() {
         final DeckardKafkaPropertiesSupplier supplier = Collections::emptyMap;
 
         final ContextPropertyKafkaProducerPropertiesBuilder builder = configurer.configureContextPropertyKafkaProducerPropertiesBuilder(supplier);
@@ -28,7 +28,7 @@ public class DefaultContextPropertyKafkaProducerPropertiesBuilderConfigurerTest 
     }
 
     @Test
-    public void shouldReturnNoPropertiesfromBuilderWhenNoDeckardKafkaPropertiesMatchId() {
+    void shouldReturnNoPropertiesfromBuilderWhenNoDeckardKafkaPropertiesMatchId() {
         final DeckardKafkaProperties deckardKafkaProperties = new DeckardKafkaProperties();
         deckardKafkaProperties.setClientId("test");
         final DeckardKafkaPropertiesSupplier supplier = () -> singletonMap("another-id", deckardKafkaProperties);
@@ -39,7 +39,7 @@ public class DefaultContextPropertyKafkaProducerPropertiesBuilderConfigurerTest 
     }
 
     @Test
-    public void shouldReturnPropertiesfromBuilderWhenDeckardKafkaPropertiesMatchId() {
+    void shouldReturnPropertiesfromBuilderWhenDeckardKafkaPropertiesMatchId() {
         final DeckardKafkaProperties deckardKafkaProperties = new DeckardKafkaProperties();
         deckardKafkaProperties.setClientId("test");
         final DeckardKafkaPropertiesSupplier supplier = () -> singletonMap("my-id", deckardKafkaProperties);

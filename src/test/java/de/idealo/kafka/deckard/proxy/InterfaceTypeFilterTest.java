@@ -1,6 +1,6 @@
 package de.idealo.kafka.deckard.proxy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.type.ClassMetadata;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
@@ -9,10 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class InterfaceTypeFilterTest {
+class InterfaceTypeFilterTest {
 
     @Test
-    public void shouldMatchInterface() {
+    void shouldMatchInterface() {
         InterfaceTypeFilter interfaceTypeFilter = new InterfaceTypeFilter(TestInterface.class);
 
         MetadataReader metadataReader = mock(MetadataReader.class);
@@ -25,6 +25,6 @@ public class InterfaceTypeFilterTest {
         assertThat(interfaceTypeFilter.match(metadataReader, metadataReaderFactory)).isTrue();
     }
 
-    private static interface TestInterface {
+    private interface TestInterface {
     }
 }

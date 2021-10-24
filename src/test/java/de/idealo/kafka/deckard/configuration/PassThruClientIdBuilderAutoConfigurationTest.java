@@ -2,17 +2,17 @@ package de.idealo.kafka.deckard.configuration;
 
 import de.idealo.kafka.deckard.properties.ClientIdBuilder;
 import de.idealo.kafka.deckard.properties.PassThroughClientIdBuilder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = "deckard.features.auto-generate-client-id.enabled=false")
-public class PassThruClientIdBuilderAutoConfigurationTest {
+class PassThruClientIdBuilderAutoConfigurationTest {
 
     @Autowired
     private ClientIdBuilder clientIdBuilder;
@@ -20,12 +20,12 @@ public class PassThruClientIdBuilderAutoConfigurationTest {
     private DeckardPropertiesAutoConfiguration configuration;
 
     @Test
-    public void shouldDisableDefaultClientIdBuilderWhenConfiguredAsDisabled() {
+    void shouldDisableDefaultClientIdBuilderWhenConfiguredAsDisabled() {
         assertThat(configuration.getFeatures().getAutoGenerateClientId().isEnabled()).isFalse();
     }
 
     @Test
-    public void shouldDefaultToDefaultContextPropertyKafkaProducerPropertiesBuilderConfigurer() {
+    void shouldDefaultToDefaultContextPropertyKafkaProducerPropertiesBuilderConfigurer() {
         assertThat(clientIdBuilder).isInstanceOf(PassThroughClientIdBuilder.class);
     }
 }

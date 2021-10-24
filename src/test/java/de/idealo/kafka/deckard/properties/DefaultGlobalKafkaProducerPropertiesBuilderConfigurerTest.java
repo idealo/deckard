@@ -1,22 +1,22 @@
 package de.idealo.kafka.deckard.properties;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DefaultGlobalKafkaProducerPropertiesBuilderConfigurerTest {
+class DefaultGlobalKafkaProducerPropertiesBuilderConfigurerTest {
 
     private DefaultGlobalKafkaProducerPropertiesBuilderConfigurer configurer;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         configurer = new DefaultGlobalKafkaProducerPropertiesBuilderConfigurer();
     }
 
     @Test
-    public void shouldUseProvidedKafkaPropertiesForGeneration() {
+    void shouldUseProvidedKafkaPropertiesForGeneration() {
         final KafkaProperties globalProperties = new KafkaProperties();
         globalProperties.setClientId("my-client");
 
@@ -26,7 +26,7 @@ public class DefaultGlobalKafkaProducerPropertiesBuilderConfigurerTest {
     }
 
     @Test
-    public void shouldUseNewKafkaPropertiesForGenerationWhenMissing() {
+    void shouldUseNewKafkaPropertiesForGenerationWhenMissing() {
         final GlobalKafkaProducerPropertiesBuilder propertiesBuilder = configurer.configureGlobalKafkaProducerPropertiesBuilder(null);
 
         assertThat(propertiesBuilder.buildProducerProperties()).isEqualTo(new KafkaProperties().buildProducerProperties());

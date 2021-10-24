@@ -10,43 +10,51 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.assertj.core.util.Lists;
-import org.awaitility.Duration;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
 import static org.springframework.kafka.test.utils.KafkaTestUtils.getRecords;
 
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {"spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}"})
-public class ProducerProxyBeanFactoryIT {
+@EmbeddedKafka(
+        partitions = 1,
+        controlledShutdown = true,
+        topics = {"the.test.topic"}
+)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ProducerProxyBeanFactoryIT {
 
     private static final String KAFKA_TEST_TOPIC = "the.test.topic";
 
-    @ClassRule
-    public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, KAFKA_TEST_TOPIC);
+    @Autowired
+    private EmbeddedKafkaBroker kafkaEmbedded;
 
     @Autowired
     TestProducer producer;
 
     @Test
-    public void shouldConfigureAnnotatedTopic() throws Exception {
+    @Timeout(5)
+    void shouldConfigureAnnotatedTopic() {
 
-        Map<String, Object> consumerProps = consumerProps("testGroup", "true", kafkaEmbedded);
+        Map<String, Object> consumerProps = new HashMap<>(KafkaTestUtils.consumerProps("testGroup", "true", kafkaEmbedded));
         consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaEmbedded.getBrokersAsString());
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -60,11 +68,9 @@ public class ProducerProxyBeanFactoryIT {
 
         producer.send(42);
 
-        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<String, Integer> records = getRecords(consumer);
-            assertThat(records.count()).isEqualTo(1);
-            stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(42));
-        });
+        ConsumerRecords<String, Integer> records = getRecords(consumer);
+        assertThat(records.count()).isEqualTo(1);
+        stream(records.spliterator(), false).map(ConsumerRecord::value).forEach(value -> assertThat(value).isEqualTo(42));
     }
 
     @KafkaProducer(topic = KAFKA_TEST_TOPIC, valueSerializer = IntegerSerializer.class)

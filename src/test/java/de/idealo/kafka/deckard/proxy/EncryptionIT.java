@@ -8,31 +8,32 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.assertj.core.util.Lists;
-import org.awaitility.Duration;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.security.crypto.encrypt.BytesEncryptor;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Duration;
 import java.util.Map;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {
         "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.LongSerializer",
         "spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer",
@@ -40,18 +41,24 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
         "deckard.my-pass:mypass",
         "deckard.my-salt:12ab"
 })
+@EmbeddedKafka(
+        partitions = 1,
+        controlledShutdown = true,
+        topics = {"my.test.topic.encrypted", "my.test.spel.topic.encrypted"},
+        brokerProperties = {
+                "listeners=PLAINTEXT://localhost:14242",
+                "port=14242"
+        }
+)
 @DirtiesContext
-public class EncryptionIT {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class EncryptionIT {
 
     private static final String KAFKA_TEST_TOPIC = "my.test.topic.encrypted";
     private static final String KAFKA_TEST_SPEL_TOPIC = "my.test.spel.topic.encrypted";
 
-    @ClassRule
-    public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC, KAFKA_TEST_SPEL_TOPIC);
-
-    static {
-        kafkaEmbedded.setKafkaPorts(14242);
-    }
+    @Autowired
+    private EmbeddedKafkaBroker kafkaEmbedded;
 
     @Autowired
     private TestConfig.EncryptingProducer customProducer;
@@ -61,37 +68,35 @@ public class EncryptionIT {
     private Consumer<Long, String> customConsumer;
     private Consumer<Long, String> customSpelConsumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         customConsumer = createConsumer(LongDeserializer.class, DecryptingStringDeserializer.class, KAFKA_TEST_TOPIC, "testConsumers");
         customSpelConsumer = createConsumer(LongDeserializer.class, DecryptingStringDeserializer.class, KAFKA_TEST_SPEL_TOPIC, "spelConsumers");
     }
 
     @Test
-    public void shouldUseEncryption() {
+    @Timeout(5)
+    void shouldUseEncryption() {
         customProducer.send(23L, "my-data");
 
-        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<Long, String> records = customConsumer.poll(100);
-            assertThat(records).hasSize(1);
-            stream(records.spliterator(), false).forEach(record -> {
-                assertThat(record.key()).isEqualTo(23L);
-                assertThat(record.value()).isEqualTo("my-data");
-            });
+        ConsumerRecords<Long, String> records = customConsumer.poll(Duration.ofMillis(1000));
+        assertThat(records).hasSize(1);
+        stream(records.spliterator(), false).forEach(record -> {
+            assertThat(record.key()).isEqualTo(23L);
+            assertThat(record.value()).isEqualTo("my-data");
         });
     }
 
     @Test
-    public void shouldUseEncryptionSetupResolvedSpelExpression() {
+    @Timeout(5)
+    void shouldUseEncryptionSetupResolvedSpelExpression() {
         customSpelProducer.send(23L, "my-data");
 
-        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<Long, String> records = customSpelConsumer.poll(100);
-            assertThat(records).hasSize(1);
-            stream(records.spliterator(), false).forEach(record -> {
-                assertThat(record.key()).isEqualTo(23L);
-                assertThat(record.value()).isEqualTo("my-data");
-            });
+        ConsumerRecords<Long, String> records = customSpelConsumer.poll(Duration.ofMillis(1000));
+        assertThat(records).hasSize(1);
+        stream(records.spliterator(), false).forEach(record -> {
+            assertThat(record.key()).isEqualTo(23L);
+            assertThat(record.value()).isEqualTo("my-data");
         });
     }
 

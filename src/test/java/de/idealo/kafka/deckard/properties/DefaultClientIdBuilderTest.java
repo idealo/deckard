@@ -2,8 +2,8 @@ package de.idealo.kafka.deckard.properties;
 
 import de.idealo.kafka.deckard.stereotype.KafkaProducer;
 import lombok.RequiredArgsConstructor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
@@ -12,17 +12,17 @@ import static java.util.Collections.singletonMap;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DefaultClientIdBuilderTest {
+class DefaultClientIdBuilderTest {
 
     private DefaultClientIdBuilder clientIdBuilder;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         clientIdBuilder = new DefaultClientIdBuilder();
     }
 
     @Test
-    public void shouldReturnGeneratedClientId() {
+    void shouldReturnGeneratedClientId() {
         final KafkaProducer producerAnnotation = new TestTopicKafkaProducer("my-topic");
         final Map<String, Object> producerProperties = singletonMap("client.id", "my-client");
 
@@ -32,7 +32,7 @@ public class DefaultClientIdBuilderTest {
     }
 
     @Test
-    public void shouldIterateGeneratedClientIds() {
+    void shouldIterateGeneratedClientIds() {
         final KafkaProducer producerAnnotation = new TestTopicKafkaProducer("my-topic");
         final Map<String, Object> producerProperties = singletonMap("client.id", "my-client");
 
