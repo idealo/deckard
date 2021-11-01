@@ -8,38 +8,51 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.assertj.core.util.Lists;
-import org.awaitility.Duration;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.Timeout;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.test.annotation.DirtiesContext;
 
+import java.util.Collections;
 import java.util.Map;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.*;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.producerProps;
 
-public class ProducerTombstoneTest {
+@SpringBootTest
+@EmbeddedKafka(
+        partitions = 1,
+        controlledShutdown = true,
+        topics = {"test.topic"}
+)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext
+class ProducerTombstoneTest {
 
     public static final String TEST_TOPIC = "test.topic";
 
-    @ClassRule
-    public static KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, false, TEST_TOPIC);
+    @Autowired
+    private EmbeddedKafkaBroker embeddedKafka;
 
     private Producer<String, MyDto> producer;
 
     private Consumer<String, MyDto> consumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Map<String, Object> producerProps = producerProps(embeddedKafka);
         producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
@@ -60,19 +73,20 @@ public class ProducerTombstoneTest {
         ConsumerFactory<String, MyDto> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
 
         this.consumer = consumerFactory.createConsumer();
-        this.consumer.subscribe(Lists.newArrayList(TEST_TOPIC));
+        this.consumer.subscribe(Collections.singletonList(TEST_TOPIC));
     }
 
     @Test
-    public void shouldSendEmptyMessage() {
+    @Timeout(5)
+    void shouldSendEmptyMessage() {
 
         producer.sendEmpty("someKey");
 
-        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<String, MyDto> records = getRecords(consumer);
-            assertThat(records.count()).isEqualTo(1);
-            stream(records.spliterator(), false).map(ConsumerRecord::key).forEach(key -> assertThat(key).isEqualTo("someKey"));
-        });
+        ConsumerRecords<String, MyDto> records = KafkaTestUtils.getRecords(consumer);
+        stream(records.spliterator(), false).map(ConsumerRecord::key).forEach(System.out::println);
+
+        assertThat(records.count()).isEqualTo(1);
+        stream(records.spliterator(), false).map(ConsumerRecord::key).forEach(key -> assertThat(key).isEqualTo("someKey"));
     }
 
     @Data

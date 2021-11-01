@@ -3,18 +3,18 @@ package de.idealo.kafka.deckard.encryption;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.Mockito.verify;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DecryptingDeserializerTest {
+@ExtendWith(MockitoExtension.class)
+class DecryptingDeserializerTest {
 
     private static final String PASS = "urdfitvozbunim";
     private static final String SALT = "1234467890abcdef";
@@ -23,7 +23,7 @@ public class DecryptingDeserializerTest {
     private StringDeserializer embeddedSerializer = new StringDeserializer();
 
     @Test
-    public void shouldConfigureEmbeddedSerializer() {
+    void shouldConfigureEmbeddedSerializer() {
         DecryptingDeserializer<String> stringDecryptingDeserializer = new DecryptingDeserializer<>(PASS, SALT, embeddedSerializer);
         Map<String, String> map = new HashMap<>();
         boolean b = true;
@@ -34,7 +34,7 @@ public class DecryptingDeserializerTest {
     }
 
     @Test
-    public void shouldCloseEmbeddedSerializer() {
+    void shouldCloseEmbeddedSerializer() {
         DecryptingDeserializer<String> stringDecryptingDeserializer = new DecryptingDeserializer<>(PASS, SALT, embeddedSerializer);
         stringDecryptingDeserializer.close();
 
@@ -42,7 +42,7 @@ public class DecryptingDeserializerTest {
     }
 
     @Test
-    public void shouldEncryptOnSerialize() {
+    void shouldEncryptOnSerialize() {
         EncryptingSerializer<String> stringEncryptingSerializer = new EncryptingSerializer<>(PASS, SALT, new StringSerializer());
         DecryptingDeserializer<String> stringDecryptingDeserializer = new DecryptingDeserializer<>(PASS, SALT, embeddedSerializer);
         byte[] encryptedData = stringEncryptingSerializer.serialize("my-topic", "my-data");

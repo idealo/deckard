@@ -1,7 +1,6 @@
 package de.idealo.kafka.deckard.properties;
 
 import de.idealo.kafka.deckard.stereotype.KafkaProducer;
-import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
 

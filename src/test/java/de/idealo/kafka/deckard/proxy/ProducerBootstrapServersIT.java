@@ -8,49 +8,57 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.assertj.core.util.Lists;
-import org.awaitility.Duration;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {
         "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.LongSerializer",
         "spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.IntegerSerializer"
 })
 @DirtiesContext
-public class ProducerBootstrapServersIT {
+@EmbeddedKafka(
+        partitions = 1,
+        controlledShutdown = true,
+        topics = "my.test.topic"
+)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ProducerBootstrapServersIT {
     private static final String KAFKA_TEST_TOPIC = "my.test.topic";
 
-    @ClassRule
-    public static KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true, 1, KAFKA_TEST_TOPIC);
+    @Autowired
+    private EmbeddedKafkaBroker kafkaEmbedded;
 
     @Autowired
     private TestConfig.MyProducer myProducer;
 
     private Consumer<Long, Integer> myConsumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        final Map<String, Object> consumerProps = consumerProps("testConsumers", "true", kafkaEmbedded);
+        final Map<String, Object> consumerProps = new HashMap<>(KafkaTestUtils.consumerProps("group1", "true", kafkaEmbedded));
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
@@ -63,16 +71,15 @@ public class ProducerBootstrapServersIT {
     }
 
     @Test
-    public void shouldConfigureAnnotatedProducerWithSerializersViaDefaultFromProperties() {
+    @Timeout(5)
+    void shouldConfigureAnnotatedProducerWithSerializersViaDefaultFromProperties() {
         myProducer.send(23L, 42);
 
-        await().atMost(Duration.FIVE_SECONDS).untilAsserted(() -> {
-            ConsumerRecords<Long, Integer> records = myConsumer.poll(100);
-            assertThat(records).hasSize(1);
-            stream(records.spliterator(), false).forEach(record -> {
-                assertThat(record.key()).isEqualTo(23L);
-                assertThat(record.value()).isEqualTo(42);
-            });
+        ConsumerRecords<Long, Integer> records = myConsumer.poll(Duration.ofMillis(1000));
+        assertThat(records).hasSize(1);
+        stream(records.spliterator(), false).forEach(record -> {
+            assertThat(record.key()).isEqualTo(23L);
+            assertThat(record.value()).isEqualTo(42);
         });
     }
 
