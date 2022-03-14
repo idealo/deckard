@@ -15,7 +15,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Proxy;
 import java.util.Map;
@@ -94,7 +93,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private Serializer<V> encryptedIfConfigured(KafkaProducer kafkaProducer, Serializer<V> embeddedSerializer) {
-            if (!kafkaProducer.encryptionPassword().equals("") || !kafkaProducer.encryptionSalt().equals("")) {
+            if (hasText(kafkaProducer.encryptionPassword()) || hasText(kafkaProducer.encryptionSalt())) {
                 Assert.isTrue(isValidEncryptionSetup(kafkaProducer.encryptionPassword(), kafkaProducer.encryptionSalt()),
                         "Both password and salt have to be set.");
                 EmbeddedValueResolver embeddedValueResolver = new EmbeddedValueResolver(configurableBeanFactory);
@@ -108,17 +107,17 @@ public class ProducerProxyBeanFactory {
         }
 
         private boolean isValidEncryptionSetup(String password, String salt) {
-            return !StringUtils.isEmpty(password) && !StringUtils.isEmpty(salt);
+            return hasText(password) && hasText(salt);
         }
 
         private Serializer<V> createValueSerializerBean(KafkaProducer kafkaProducer, Map<String, Object> producerProperties) throws InstantiationException, IllegalAccessException {
             return (Serializer<V>) retrieveValueSerializerClass(kafkaProducer)
-                    .orElse((Class)producerProperties.get("value.serializer")).newInstance();
+                    .orElse((Class) producerProperties.get("value.serializer")).newInstance();
         }
 
         private Serializer<K> createKeySerializerBean(KafkaProducer kafkaProducer, Map<String, Object> producerProperties) throws InstantiationException, IllegalAccessException {
             return (Serializer<K>) retrieveKeySerializerClass(kafkaProducer)
-                    .orElse((Class)producerProperties.get("key.serializer")).newInstance();
+                    .orElse((Class) producerProperties.get("key.serializer")).newInstance();
         }
 
         private String retrieveTopic(Class<T> producerClass, final KafkaProducer kafkaProducer) {
@@ -180,7 +179,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private boolean isValueSerializerBeanDefined(final KafkaProducer kafkaProducer) {
-            return nonNull(kafkaProducer) && !kafkaProducer.valueSerializerBean().equals("");
+            return nonNull(kafkaProducer) && hasText(kafkaProducer.valueSerializerBean());
         }
 
         private boolean keySerializerDefined(final KafkaProducer kafkaProducer) {
@@ -188,7 +187,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private boolean isKeySerializerBeanDefined(final KafkaProducer kafkaProducer) {
-            return nonNull(kafkaProducer) && !kafkaProducer.keySerializerBean().equals("");
+            return nonNull(kafkaProducer) && hasText(kafkaProducer.keySerializerBean());
         }
     }
 }
