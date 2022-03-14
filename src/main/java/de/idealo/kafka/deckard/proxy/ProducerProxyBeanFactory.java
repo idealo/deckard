@@ -15,7 +15,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Proxy;
 import java.util.Map;
@@ -94,7 +93,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private Serializer<V> encryptedIfConfigured(KafkaProducer kafkaProducer, Serializer<V> embeddedSerializer) {
-            if (!kafkaProducer.encryptionPassword().isEmpty() || !kafkaProducer.encryptionSalt().isEmpty()) {
+            if (hasText(kafkaProducer.encryptionPassword()) || hasText(kafkaProducer.encryptionSalt())) {
                 Assert.isTrue(isValidEncryptionSetup(kafkaProducer.encryptionPassword(), kafkaProducer.encryptionSalt()),
                         "Both password and salt have to be set.");
                 EmbeddedValueResolver embeddedValueResolver = new EmbeddedValueResolver(configurableBeanFactory);
@@ -108,7 +107,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private boolean isValidEncryptionSetup(String password, String salt) {
-            return !password.isEmpty() && !salt.isEmpty();
+            return hasText(password) && hasText(salt);
         }
 
         private Serializer<V> createValueSerializerBean(KafkaProducer kafkaProducer, Map<String, Object> producerProperties) throws InstantiationException, IllegalAccessException {
