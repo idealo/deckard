@@ -179,7 +179,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private boolean isValueSerializerBeanDefined(final KafkaProducer kafkaProducer) {
-            return nonNull(kafkaProducer) && !kafkaProducer.valueSerializerBean().isEmpty();
+            return nonNull(kafkaProducer) && hasText(kafkaProducer.valueSerializerBean());
         }
 
         private boolean keySerializerDefined(final KafkaProducer kafkaProducer) {
@@ -187,7 +187,7 @@ public class ProducerProxyBeanFactory {
         }
 
         private boolean isKeySerializerBeanDefined(final KafkaProducer kafkaProducer) {
-            return nonNull(kafkaProducer) && !kafkaProducer.keySerializerBean().isEmpty();
+            return nonNull(kafkaProducer) && hasText(kafkaProducer.keySerializerBean());
         }
     }
 }
