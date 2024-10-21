@@ -65,7 +65,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
-        <maven-failsafe.version>2.22.0</maven-failsafe.version>
+        <maven-failsafe.version>2.22.2</maven-failsafe.version>
     </properties>
 
     <repositories>
