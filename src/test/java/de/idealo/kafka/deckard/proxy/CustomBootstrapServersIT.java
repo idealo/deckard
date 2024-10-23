@@ -74,7 +74,7 @@ class CustomBootstrapServersIT {
     void shouldUseBootstrapServersFromAnnotation() {
         customProducer.send(23L, 42);
 
-        ConsumerRecords<Long, Integer> records = customConsumer.poll(100);
+        ConsumerRecords<Long, Integer> records = customConsumer.poll(Duration.ofMillis(1000));
         assertThat(records).hasSize(1);
         stream(records.spliterator(), false).forEach(record -> {
             assertThat(record.key()).isEqualTo(23L);

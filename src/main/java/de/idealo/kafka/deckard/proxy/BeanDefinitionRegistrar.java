@@ -25,8 +25,7 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
-        getProducerClasses()
-                .forEach(producerClass -> registerBean(registry, producerClass));
+        getProducerClasses().forEach(producerClass -> registerBean(registry, producerClass));
     }
 
     private Collection<Class<?>> getProducerClasses() {
@@ -49,15 +48,13 @@ public class BeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
     private void registerBean(BeanDefinitionRegistry registry, Class<?> beanClass) {
         String beanName = StringUtils.uncapitalize(beanClass.getSimpleName());
 
-        GenericBeanDefinition proxyBeanDefinition = new GenericBeanDefinition();
-        proxyBeanDefinition.setBeanClass(beanClass);
-
         ConstructorArgumentValues args = new ConstructorArgumentValues();
-
         args.addGenericArgumentValue(this.getClass().getClassLoader());
         args.addGenericArgumentValue(beanClass);
-        proxyBeanDefinition.setConstructorArgumentValues(args);
 
+        GenericBeanDefinition proxyBeanDefinition = new GenericBeanDefinition();
+        proxyBeanDefinition.setBeanClass(beanClass);
+        proxyBeanDefinition.setConstructorArgumentValues(args);
         proxyBeanDefinition.setFactoryBeanName(ProducerProxyBeanFactory.DEFAULT_FACTORY_BEAN_NAME);
         proxyBeanDefinition.setFactoryMethodName("createBean");
         proxyBeanDefinition.setDestroyMethodName("close");

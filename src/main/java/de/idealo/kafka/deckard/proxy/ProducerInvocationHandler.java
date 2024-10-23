@@ -9,24 +9,25 @@ import java.lang.reflect.Method;
 @RequiredArgsConstructor
 public class ProducerInvocationHandler<K, V> implements InvocationHandler {
 
-    private static final int MAX_NUMBER_OF_ARGUMENTS = 2;
-
     private final Producer<K, V> producer;
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        if ("send".equals(method.getName())) {
-            if (args.length == 1) {
-                producer.send((V) args[0]);
-            } else if (args.length == MAX_NUMBER_OF_ARGUMENTS) {
-                producer.send((K) args[0], (V) args[1]);
-            }
-        } else if ("sendEmpty".equals(method.getName())) {
-            producer.sendEmpty((K) args[0]);
-        } else if ("close".equals(method.getName())) {
-            producer.close();
+        switch (method.getName()) {
+            case "send":
+                if (args.length == 1) {
+                    producer.send((V) args[0]);
+                } else {
+                    producer.send((K) args[0], (V) args[1]);
+                }
+                break;
+            case "sendEmpty":
+                producer.sendEmpty((K) args[0]);
+                break;
+            case "close":
+                producer.close();
+               break;
         }
-
         return 0;
     }
 }
