@@ -4,6 +4,7 @@
 name: Maven Central
 
 on:
+  workflow_dispatch:
   release:
     types: [created]
 
@@ -20,7 +21,7 @@ jobs:
 
     - name: Install gpg secret key
       run: |
-        cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
+        cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY2 }}" | base64 --decode)  | gpg --batch --import
         gpg --list-secret-keys --keyid-format LONG
 
     - name: Set up Java for publishing to Maven Central Repository
@@ -33,7 +34,7 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Publish to Maven Central
-      run: mvn deploy -B -ntp -P release-to-maven-central -s $GITHUB_WORKSPACE/settings.xml -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -DskipTests
+      run: mvn deploy -B -ntp -P release-to-maven-central -s $GITHUB_WORKSPACE/settings.xml -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD2 }} -DskipTests
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
