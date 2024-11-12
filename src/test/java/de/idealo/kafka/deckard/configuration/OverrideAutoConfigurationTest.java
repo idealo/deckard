@@ -16,7 +16,7 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
 class OverrideAutoConfigurationTest {
 
     @Autowired
