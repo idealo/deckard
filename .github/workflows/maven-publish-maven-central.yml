@@ -4,7 +4,6 @@
 name: Maven Central
 
 on:
-  workflow_dispatch:
   release:
     types: [created]
 
