@@ -146,14 +146,13 @@ deckard:
 
 #### Notes on Versioning and Compatibility
 
-Deckard was originally built on Spring Kafka 2.0.x which is only compatible with Spring Boot 2.0.x.
-To go forward with development for Spring Boot 2.1.x, but also support projects based on Spring Boot 2.0.x, we introduced the following versioning scheme:
-
+- 3.x -> supports Spring Kafka 3.3.x and is compatible with Spring Boot 3.4.x
 - 2.x -> supports Spring Kafka 3.2.x and is compatible with Spring Boot 3.3.x
 - 1.x -> supports Spring Kafka 2.2.x and is compatible with Spring Boot 2.1.x
 - 0.x (LEGACY) -> supports Spring Kafka 2.1.x and is compatible with Spring Boot 2.0.x
 
-We will try to add new features in both versions as long as possible.
+We will mostly maintain the latest major version. If you need a specific older version, please check the tags or branches.
+Critical bug fixes will be backported to older major versions if required.
 
 #### About the project
 
