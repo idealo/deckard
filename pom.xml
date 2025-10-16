@@ -5,7 +5,7 @@
 
     <groupId>de.idealo.kafka</groupId>
     <artifactId>deckard</artifactId>
-    <version>2.0.0-RELEASE</version>
+    <version>1.1.x-RELEASE</version>
     <packaging>jar</packaging>
 
     <name>Deckard</name>
@@ -57,7 +57,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <version>3.1.12</version>
         <relativePath/>
     </parent>
 
@@ -65,6 +65,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
+        <maven.compiler.release>17</maven.compiler.release>
         <maven-failsafe.version>3.5.2</maven-failsafe.version>
     </properties>
 
@@ -98,7 +99,7 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-avro-serializer</artifactId>
-            <version>7.7.1</version>
+            <version>7.7.4</version>
             <scope>test</scope>
         </dependency>
 
@@ -108,9 +109,15 @@
             <version>4.8.179</version>
         </dependency>
 
+        <!-- processors-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -211,6 +218,24 @@
                         <include>**/*IT.java</include>
                     </includes>
                     <goal>integration-test</goal>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.32</version>
+                        </path>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>3.1.12</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

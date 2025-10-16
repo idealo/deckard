@@ -150,6 +150,7 @@ Deckard was originally built on Spring Kafka 2.0.x which is only compatible with
 To go forward with development for Spring Boot 2.1.x, but also support projects based on Spring Boot 2.0.x, we introduced the following versioning scheme:
 
 - 2.x -> supports Spring Kafka 3.2.x and is compatible with Spring Boot 3.3.x
+- 1.1 -> supports Spring Kafka 3.0.x and is compatible with Spring Boot 3.1.x
 - 1.x -> supports Spring Kafka 2.2.x and is compatible with Spring Boot 2.1.x
 - 0.x (LEGACY) -> supports Spring Kafka 2.1.x and is compatible with Spring Boot 2.0.x
 
