@@ -5,7 +5,7 @@
 
     <groupId>de.idealo.kafka</groupId>
     <artifactId>deckard</artifactId>
-    <version>3.0.0-RELEASE</version>
+    <version>4.0.0-RELEASE</version>
     <packaging>jar</packaging>
 
     <name>Deckard</name>
@@ -57,7 +57,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.10</version>
+        <version>3.5.6</version>
         <relativePath/>
     </parent>
 
@@ -90,6 +90,10 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
@@ -211,6 +215,24 @@
                         <include>**/*IT.java</include>
                     </includes>
                     <goal>integration-test</goal>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.40</version>
+                        </path>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>3.5.6</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>
