@@ -145,11 +145,12 @@ deckard:
 
 
 #### Notes on Versioning and Compatibility
-
-- 3.x -> supports Spring Kafka 3.3.x and is compatible with Spring Boot 3.4.x
-- 2.x -> supports Spring Kafka 3.2.x and is compatible with Spring Boot 3.3.x
-- 1.x -> supports Spring Kafka 2.2.x and is compatible with Spring Boot 2.1.x
-- 0.x (LEGACY) -> supports Spring Kafka 2.1.x and is compatible with Spring Boot 2.0.x
+- 
+- 3.x.x -> supports Spring Kafka 3.3.x and is compatible with Spring Boot 3.4.x
+- 2.x.x -> supports Spring Kafka 3.2.x and is compatible with Spring Boot 3.3.x
+- 1.1.x -> supports Spring Kafka 3.0.x and is compatible with Spring Boot 3.1.x
+- 1.x.x -> supports Spring Kafka 2.2.x and is compatible with Spring Boot 2.1.x
+- 0.x.x (LEGACY) -> supports Spring Kafka 2.1.x and is compatible with Spring Boot 2.0.x
 
 We will mostly maintain the latest major version. If you need a specific older version, please check the tags or branches.
 Critical bug fixes will be backported to older major versions if required.
