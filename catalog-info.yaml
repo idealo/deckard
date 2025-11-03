@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: deckard
+  annotations:
+    github.com/project-slug: idealo/deckard
+    github.com/team-slug: idealo/deckard-contributers
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: documentation
+  lifecycle: production
+  owner: group:deckard-contributers
