@@ -1,0 +1,3 @@
+de.idealo.kafka.deckard.configuration.DeckardPropertiesAutoConfiguration
+de.idealo.kafka.deckard.configuration.KafkaProducerAutoConfiguration
+de.idealo.kafka.deckard.configuration.BeanDefinitionRegistrarAutoConfiguration
